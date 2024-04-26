@@ -1,49 +1,39 @@
-﻿using Services;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using CSharpKit;
+using Services;
 
 namespace CompreDemo.Forms
 {
     public partial class MotionTest : Form
     {
+        #region 笔刷
         readonly Graphics graphics;
         Pen pen = new Pen(Color.LightBlue, 2);
         SolidBrush brush1 = new SolidBrush(Color.Red);
         SolidBrush brush2;
+        #endregion
 
-        public bool IsDraw = true;
+        bool isDraw = true;
+        Task? drawing;
 
-        public MotionTest()
+        public MotionTest(BaseAxis axis1, BaseAxis axis2)
         {
             InitializeComponent();
             graphics = CreateGraphics();
             brush2 = new SolidBrush(BackColor);
+            Processkit.StartTask(drawing, () => { DrawingTrack(axis1, axis2, 100); });
         }
 
-        public void DrawingTrack(BaseAxis axis1, BaseAxis axis2, float offset = 0)
+        private void MotionTest_Paint(object sender, PaintEventArgs e)
         {
-            if (axis1 == null || axis2 == null) return;
-            IsDraw = true;
-            float x = offset;
-            float y = offset;
-            while (IsDraw)
-            {
-                float m = x;
-                float n = y;
-                Thread.Sleep(10);
-                graphics.FillEllipse(brush2, m + 1, n, 4, 4);
-                x = (float)axis1.CurrentPosition + offset;
-                y = (float)axis2.CurrentPosition + offset;
-                graphics.FillEllipse(brush1, x + 1, y, 4, 4);
-                graphics.DrawLine(pen, m, n, x, y);
-            }
+            //防止窗口加载时Graphics被线程占用
+            DrawCoordinate(e.Graphics);
+        }
+
+        private void MotionTest_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            isDraw = false;
+            //e.Cancel = true;
+            //Hide();
         }
 
         private void DrawHLine(Graphics graphics, Pen pen, int x1, int x2, int y, int step = 100)
@@ -56,7 +46,7 @@ namespace CompreDemo.Forms
                 for (int i = 0; i < length / step; i++)
                 {
                     graphics.DrawLine(pen, step * i, y, step * i, y + 5);
-                    graphics.DrawString((step * i).ToString(), new Font("宋体", 10), brush, new PointF(step * i, 5));
+                    graphics.DrawString((step * i).ToString(), new Font("宋体", 10), brush, new PointF(step * i, y));
                 }
             }
             else
@@ -76,7 +66,7 @@ namespace CompreDemo.Forms
                 {
                     if (i == 0) continue;
                     graphics.DrawLine(pen, x, step * i, x + 5, step * i);
-                    graphics.DrawString((step * i).ToString(), new Font("宋体", 10), brush, new PointF(5, step * i));
+                    graphics.DrawString((step * i).ToString(), new Font("宋体", 10), brush, new PointF(x, step * i));
                 }
             }
             else
@@ -85,17 +75,46 @@ namespace CompreDemo.Forms
             }
         }
 
+        public void DrawCoordinate(Graphics graphics, int x = 1000, int y = 850, int step = 100)
+        {
+            Pen pen = new(Color.Green, 2);
+            DrawHLine(graphics, pen, 0, x, 0, step);
+            DrawVLine(graphics, pen, 0, y, 0, step);
+        }
+
+        public void DrawingTrack(BaseAxis axis1, BaseAxis axis2, float offset = 0)
+        {
+            if (axis1 == null || axis2 == null) return;
+            isDraw = true;
+            float x = offset;
+            float y = offset;
+            while (isDraw)
+            {
+                float m = x;
+                float n = y;
+                Thread.Sleep(10);
+                graphics.FillEllipse(brush2, m + 1, n, 4, 4);
+                x = (float)axis1.CurrentPosition + offset;
+                y = (float)axis2.CurrentPosition + offset;
+                graphics.FillEllipse(brush1, x + 1, y, 4, 4);
+                graphics.DrawLine(pen, m, n, x, y);
+            }
+        }
+
+        public void StartDrawing(BaseAxis axis1, BaseAxis axis2)
+        {
+            Processkit.StartTask(drawing, () => { DrawingTrack(axis1, axis2); });
+        }
+
         public void Clear()
         {
             graphics.Clear(Color.White);
         }
 
-        private void MotionTest_Paint(object sender, PaintEventArgs e)
+        private void TSM清除_Click(object sender, EventArgs e)
         {
-            Graphics graphics = e.Graphics;
-            Pen pen = new Pen(Color.Green, 2);
-            DrawHLine(graphics, pen, 0, 1000, 0, 100);
-            DrawVLine(graphics, pen, 0, 1000, 0, 100);
+            Clear();
+            DrawCoordinate(graphics);
         }
     }
 }

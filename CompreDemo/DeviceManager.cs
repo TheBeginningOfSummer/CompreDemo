@@ -174,12 +174,12 @@ namespace CompreDemo
             {
                 //轴卡重新初始化
                 controller.Initialize();
-                //轴重新初始化
+                //轴重新初始化，加载连接后的Handle
                 controller.ReinitializeAxes();
                 //轴参数重新初始化
                 foreach (var item in controller.Axes.Values)
                     item.Initialize();
-                MessageBox.Show("连接成功");
+                //MessageBox.Show("连接成功");
                 return true;
             }
             else
@@ -194,29 +194,12 @@ namespace CompreDemo
             var controller = GetController(controllerName);
             if (controller == null) return;
             controller.Disconnect();
+            MessageBox.Show("断开连接");
         }
 
         #endregion
 
         #region 自动轨迹
-        //public void StartTrack(string controllerName, bool isShowTrack = false)
-        //{
-        //    if (string.IsNullOrEmpty(controllerName)) return;
-        //    if (!Controllers.ContainsKey(controllerName)) return;
-        //    if (BGW_Auto.IsBusy)
-        //    {
-        //        MessageBox.Show("运行中");
-        //        return;
-        //    }
-        //    else
-        //    {
-        //        if (isShowTrack)
-        //            TestForm.StartDrawTrackXY(100,
-        //            GetAxis(controllerName, "Axis1"),
-        //            GetAxis(controllerName, "Axis2"));
-        //        BGW_Auto.RunWorkerAsync(controllerName);
-        //    }
-        //}
 
         //private void BGW_Auto_DoWork(object sender, DoWorkEventArgs e)
         //{
@@ -224,79 +207,74 @@ namespace CompreDemo
         //    //Track2(e.Argument.ToString(), 300, 5, 300, 50);
         //}
 
-        //private void BGW_Auto_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        //{
-        //    TestForm.Stop();
-        //}
+        public static void Track1(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
+        {
+            BaseAxis axis1 = motion.Axes["Axis1"];
+            BaseAxis axis2 = motion.Axes["Axis2"];
+            if (axis1 == null || axis2 == null) return;
+            axis1.SingleAbsoluteMove(startX); axis1.Wait();
+            //if (BGW_Auto.CancellationPending) return;
+            //suspend.WaitOne();
+            if (times % 2 != 0)
+            {
+                //int remainder = cutTimes % 2;
+                for (int i = 0; i < times / 2; i++)
+                {
+                    axis2.SingleAbsoluteMove(targetPosY1);
+                    axis2.Wait();
+                    axis1.SingleRelativeMove(intervalX1);
+                    axis1.Wait();
+                    //if (BGW_Auto.CancellationPending) return;
+                    axis2.SingleAbsoluteMove(0);
+                    axis2.Wait();
+                    axis1.SingleRelativeMove(intervalX1);
+                    axis1.Wait();
+                    //if (BGW_Auto.CancellationPending) return;
+                    //suspend.WaitOne();
+                }
+                axis2.SingleAbsoluteMove(targetPosY1);
+                axis2.Wait();
+            }
+            else
+            {
+                for (int i = 0; i < times / 2; i++)
+                {
+                    axis2.SingleAbsoluteMove(targetPosY1);
+                    axis2.Wait();
+                    axis1.SingleRelativeMove(intervalX1);
+                    axis1.Wait();
+                    //if (BGW_Auto.CancellationPending) return;
+                    axis2.SingleAbsoluteMove(0);
+                    axis2.Wait();
+                    axis1.SingleRelativeMove(intervalX1);
+                    axis1.Wait();
+                    //if (BGW_Auto.CancellationPending) return;
+                    //suspend.WaitOne();
+                }
+            }
+        }
 
-        //public void Track1(string name, double startX, int times, double targetPosY1, double intervalX1)
-        //{
-        //    BaseAxis axis1 = GetAxis(name, "Axis1");
-        //    BaseAxis axis2 = GetAxis(name, "Axis2");
-        //    if (axis1 == null || axis2 == null) return;
-        //    axis1.SingleAbsoluteMove(startX); axis1.Wait();
-        //    if (BGW_Auto.CancellationPending) return;
-        //    //suspend.WaitOne();
-        //    if (times % 2 != 0)
-        //    {
-        //        //int remainder = cutTimes % 2;
-        //        for (int i = 0; i < times / 2; i++)
-        //        {
-        //            axis2.SingleAbsoluteMove(targetPosY1);
-        //            axis2.Wait();
-        //            axis1.SingleRelativeMove(intervalX1);
-        //            axis1.Wait();
-        //            if (BGW_Auto.CancellationPending) return;
-        //            axis2.SingleAbsoluteMove(0);
-        //            axis2.Wait();
-        //            axis1.SingleRelativeMove(intervalX1);
-        //            axis1.Wait();
-        //            if (BGW_Auto.CancellationPending) return;
-        //            //suspend.WaitOne();
-        //        }
-        //        axis2.SingleAbsoluteMove(targetPosY1);
-        //        axis2.Wait();
-        //    }
-        //    else
-        //    {
-        //        for (int i = 0; i < times / 2; i++)
-        //        {
-        //            axis2.SingleAbsoluteMove(targetPosY1);
-        //            axis2.Wait();
-        //            axis1.SingleRelativeMove(intervalX1);
-        //            axis1.Wait();
-        //            if (BGW_Auto.CancellationPending) return;
-        //            axis2.SingleAbsoluteMove(0);
-        //            axis2.Wait();
-        //            axis1.SingleRelativeMove(intervalX1);
-        //            axis1.Wait();
-        //            if (BGW_Auto.CancellationPending) return;
-        //            //suspend.WaitOne();
-        //        }
-        //    }
-        //}
-
-        //public void Track2(string name, double startX, int times, double targetPosY1, double intervalX1)
-        //{
-        //    BaseAxis axis1 = GetAxis(name, "Axis1");
-        //    BaseAxis axis2 = GetAxis(name, "Axis2");
-        //    if (axis1 == null || axis2 == null) return;
-        //    axis1.SingleAbsoluteMove(startX);
-        //    axis1.Wait();
-        //    for (int i = 0; i < times; i++)
-        //    {
-        //        Controllers[name].SetOutput(0, 1);
-        //        axis2.SingleAbsoluteMove(targetPosY1);
-        //        axis2.Wait();
-        //        Controllers[name].SetOutput(0, 0);
-        //        axis1.SingleRelativeMove(intervalX1);
-        //        axis1.Wait();
-        //        axis2.SingleAbsoluteMove(0);
-        //        axis2.Wait();
-        //        if (BGW_Auto.CancellationPending) return;
-        //        //suspend.WaitOne();
-        //    }
-        //}
+        public static void Track2(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
+        {
+            BaseAxis axis1 = motion.Axes["Axis1"];
+            BaseAxis axis2 = motion.Axes["Axis2"];
+            if (axis1 == null || axis2 == null) return;
+            axis1.SingleAbsoluteMove(startX);
+            axis1.Wait();
+            for (int i = 0; i < times; i++)
+            {
+                motion.SetOutput(0, 1);
+                axis2.SingleAbsoluteMove(targetPosY1);
+                axis2.Wait();
+                motion.SetOutput(0, 0);
+                axis1.SingleRelativeMove(intervalX1);
+                axis1.Wait();
+                axis2.SingleAbsoluteMove(0);
+                axis2.Wait();
+                //if (BGW_Auto.CancellationPending) return;
+                //suspend.WaitOne();
+            }
+        }
 
         #endregion
 

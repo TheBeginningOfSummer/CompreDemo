@@ -547,13 +547,13 @@ namespace Services
     {
         public string Name { get; set; } = "DefaultController";
         public string IP { get; set; } = "127.0.0.1";
-        public List<string> AxesName { get; set; } = new List<string>();
-        public Dictionary<string, BaseAxis> Axes = new Dictionary<string, BaseAxis>();
+        public List<string> AxesName { get; set; } = [];
+        public Dictionary<string, BaseAxis> Axes = [];
         public abstract void Initialize();
         public abstract bool Connect();
         public abstract void Disconnect();
         public abstract bool IsConnected();
-        public abstract void ReinitializeAxes();
+        public abstract void ReinitializeAxes();//连接后需要重新加载handle，trio板卡可能不需要
         public abstract bool AddAxis(string axisName);
         public abstract bool RemoveAxis(string axisName);
         public abstract void Scram();

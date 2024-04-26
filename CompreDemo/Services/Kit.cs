@@ -1990,12 +1990,12 @@ namespace CSharpKit
     /// <summary>
     /// 进程管理工具
     /// </summary>
-    public class ProcessToolkit
+    public class Processkit
     {
         public Process TargetProcess { get; set; }
         public string Output { get; set; }
 
-        public ProcessToolkit(string processPath)
+        public Processkit(string processPath)
         {
             TargetProcess = new Process();
             Output = "Default";
@@ -2075,6 +2075,20 @@ namespace CSharpKit
             //TargetProcess.CancelOutputRead();
             TargetProcess.WaitForExit();
             TargetProcess.Close();
+        }
+
+        public static void StartTask(Task? task, Action action)
+        {
+            if (task == null)
+            {
+                task = new Task(action);
+            }
+            else
+            {
+                task.Wait();
+                task = new Task(action);
+            }
+            task.Start();
         }
     }
 

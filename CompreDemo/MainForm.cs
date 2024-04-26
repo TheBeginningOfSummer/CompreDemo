@@ -4,15 +4,25 @@ namespace CompreDemo
 {
     public partial class MainForm : Form
     {
+        readonly DeviceManager device = DeviceManager.Instance;
+
         public MainForm()
         {
             InitializeComponent();
+
+            device.Connect("Zmotion1");
         }
 
         private void TSMøÿ÷∆ø®≈‰÷√_Click(object sender, EventArgs e)
         {
             MotionSetting motionSetting = new();
-            motionSetting.ShowDialog();
+            motionSetting.Show();
+        }
+
+        private void TSMœ‡ª˙≈‰÷√_Click(object sender, EventArgs e)
+        {
+            CameraSetting cameraSetting = new();
+            cameraSetting.ShowDialog();
         }
     }
 }

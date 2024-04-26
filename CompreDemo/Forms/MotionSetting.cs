@@ -1,4 +1,6 @@
-﻿namespace CompreDemo.Forms
+﻿using CSharpKit;
+
+namespace CompreDemo.Forms
 {
     public partial class MotionSetting : Form
     {
@@ -74,13 +76,39 @@
 
         private void BTN轴控制_Click(object sender, EventArgs e)
         {
+            var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
+            if (currentAxis == null) return;
+            ManualControl manualControl = new ManualControl(currentAxis);
+            manualControl.Show();
+        }
 
+        private void TSM连接_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(CB轴卡.Text)) return;
+            device.Connect(CB轴卡.Text);
+        }
+
+        private void TSM断开_Click(object sender, EventArgs e)
+        {
+            device.Disconnect(CB轴卡.Text);
         }
 
         private void TSM打开测试窗口_Click(object sender, EventArgs e)
         {
-            MotionTest motionTest = new MotionTest();
+            var axis1 = device.GetAxis(CB轴卡.Text, TST测试轴1名称.Text);
+            var axis2 = device.GetAxis(CB轴卡.Text, TST测试轴2名称.Text);
+            if (axis1 == null || axis2 == null) return;
+            MotionTest motionTest = new(axis1, axis2);
             motionTest.Show();
+        }
+
+        private void TSM自动轨迹测试_Click(object sender, EventArgs e)
+        {
+            var motion = device.GetController(CB轴卡.Text);
+            if (motion == null) return;
+            //Task.Run(() => { DeviceManager.Track1(motion, 0, 7, 400, 50); });
+
+            Task.Run(() => { DeviceManager.Track2(motion, 300, 5, 300, 50); });
         }
     }
 }

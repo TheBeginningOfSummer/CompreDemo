@@ -39,6 +39,8 @@
             TSM断开 = new ToolStripMenuItem();
             TSM测试 = new ToolStripMenuItem();
             TSM打开测试窗口 = new ToolStripMenuItem();
+            TST测试轴1名称 = new ToolStripTextBox();
+            TST测试轴2名称 = new ToolStripTextBox();
             TSM自动轨迹测试 = new ToolStripMenuItem();
             LBIP地址 = new Label();
             TBIP地址 = new TextBox();
@@ -49,6 +51,7 @@
             LB轴卡信息 = new Label();
             BTN轴删除 = new Button();
             BTN轴控制 = new Button();
+            TST轨迹 = new ToolStripTextBox();
             MS菜单.SuspendLayout();
             SuspendLayout();
             // 
@@ -121,12 +124,14 @@
             TSM连接.Name = "TSM连接";
             TSM连接.Size = new Size(44, 21);
             TSM连接.Text = "连接";
+            TSM连接.Click += TSM连接_Click;
             // 
             // TSM断开
             // 
             TSM断开.Name = "TSM断开";
             TSM断开.Size = new Size(44, 21);
             TSM断开.Text = "断开";
+            TSM断开.Click += TSM断开_Click;
             // 
             // TSM测试
             // 
@@ -137,16 +142,33 @@
             // 
             // TSM打开测试窗口
             // 
+            TSM打开测试窗口.DropDownItems.AddRange(new ToolStripItem[] { TST测试轴1名称, TST测试轴2名称 });
             TSM打开测试窗口.Name = "TSM打开测试窗口";
             TSM打开测试窗口.Size = new Size(180, 22);
             TSM打开测试窗口.Text = "打开测试窗口";
             TSM打开测试窗口.Click += TSM打开测试窗口_Click;
             // 
+            // TST测试轴1名称
+            // 
+            TST测试轴1名称.Name = "TST测试轴1名称";
+            TST测试轴1名称.Size = new Size(100, 23);
+            TST测试轴1名称.Text = "Axis1";
+            TST测试轴1名称.ToolTipText = "测试轴1名称";
+            // 
+            // TST测试轴2名称
+            // 
+            TST测试轴2名称.Name = "TST测试轴2名称";
+            TST测试轴2名称.Size = new Size(100, 23);
+            TST测试轴2名称.Text = "Axis2";
+            TST测试轴2名称.ToolTipText = "测试轴2名称";
+            // 
             // TSM自动轨迹测试
             // 
+            TSM自动轨迹测试.DropDownItems.AddRange(new ToolStripItem[] { TST轨迹 });
             TSM自动轨迹测试.Name = "TSM自动轨迹测试";
-            TSM自动轨迹测试.Size = new Size(148, 22);
+            TSM自动轨迹测试.Size = new Size(180, 22);
             TSM自动轨迹测试.Text = "自动轨迹测试";
+            TSM自动轨迹测试.Click += TSM自动轨迹测试_Click;
             // 
             // LBIP地址
             // 
@@ -227,6 +249,12 @@
             BTN轴控制.UseVisualStyleBackColor = true;
             BTN轴控制.Click += BTN轴控制_Click;
             // 
+            // TST轨迹
+            // 
+            TST轨迹.Name = "TST轨迹";
+            TST轨迹.Size = new Size(100, 23);
+            TST轨迹.ToolTipText = "轨迹";
+            // 
             // MotionSetting
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
@@ -280,5 +308,8 @@
         private Label LB轴卡信息;
         private Button BTN轴删除;
         private Button BTN轴控制;
+        private ToolStripTextBox TST测试轴1名称;
+        private ToolStripTextBox TST测试轴2名称;
+        private ToolStripTextBox TST轨迹;
     }
 }

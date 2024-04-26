@@ -30,7 +30,7 @@
         {
             MS菜单 = new MenuStrip();
             TSM设置 = new ToolStripMenuItem();
-            TSM相机设置 = new ToolStripMenuItem();
+            TSM相机配置 = new ToolStripMenuItem();
             TSM控制卡配置 = new ToolStripMenuItem();
             MS菜单.SuspendLayout();
             SuspendLayout();
@@ -48,21 +48,22 @@
             // TSM设置
             // 
             TSM设置.Alignment = ToolStripItemAlignment.Right;
-            TSM设置.DropDownItems.AddRange(new ToolStripItem[] { TSM相机设置, TSM控制卡配置 });
+            TSM设置.DropDownItems.AddRange(new ToolStripItem[] { TSM相机配置, TSM控制卡配置 });
             TSM设置.Name = "TSM设置";
             TSM设置.Size = new Size(44, 21);
             TSM设置.Text = "设置";
             // 
-            // TSM相机设置
+            // TSM相机配置
             // 
-            TSM相机设置.Name = "TSM相机设置";
-            TSM相机设置.Size = new Size(136, 22);
-            TSM相机设置.Text = "相机设置";
+            TSM相机配置.Name = "TSM相机配置";
+            TSM相机配置.Size = new Size(180, 22);
+            TSM相机配置.Text = "相机配置";
+            TSM相机配置.Click += TSM相机配置_Click;
             // 
             // TSM控制卡配置
             // 
             TSM控制卡配置.Name = "TSM控制卡配置";
-            TSM控制卡配置.Size = new Size(136, 22);
+            TSM控制卡配置.Size = new Size(180, 22);
             TSM控制卡配置.Text = "控制卡配置";
             TSM控制卡配置.Click += TSM控制卡配置_Click;
             // 
@@ -86,7 +87,7 @@
 
         private MenuStrip MS菜单;
         private ToolStripMenuItem TSM设置;
-        private ToolStripMenuItem TSM相机设置;
+        private ToolStripMenuItem TSM相机配置;
         private ToolStripMenuItem TSM控制卡配置;
     }
 }

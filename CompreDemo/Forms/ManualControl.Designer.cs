@@ -61,7 +61,7 @@
             // 
             MS运动控制.Location = new Point(0, 0);
             MS运动控制.Name = "MS运动控制";
-            MS运动控制.Size = new Size(800, 24);
+            MS运动控制.Size = new Size(434, 24);
             MS运动控制.TabIndex = 2;
             MS运动控制.Text = "运动控制";
             // 
@@ -73,6 +73,7 @@
             BTN相对移动.TabIndex = 3;
             BTN相对移动.Text = "相对移动";
             BTN相对移动.UseVisualStyleBackColor = true;
+            BTN相对移动.Click += BTN相对移动_Click;
             // 
             // BTN绝对移动
             // 
@@ -82,6 +83,7 @@
             BTN绝对移动.TabIndex = 4;
             BTN绝对移动.Text = "绝对移动";
             BTN绝对移动.UseVisualStyleBackColor = true;
+            BTN绝对移动.Click += BTN绝对移动_Click;
             // 
             // BTN后
             // 
@@ -91,6 +93,7 @@
             BTN后.TabIndex = 5;
             BTN后.Text = "←";
             BTN后.UseVisualStyleBackColor = true;
+            BTN后.Click += BTN后_Click;
             // 
             // BTN前
             // 
@@ -100,6 +103,7 @@
             BTN前.TabIndex = 6;
             BTN前.Text = "→";
             BTN前.UseVisualStyleBackColor = true;
+            BTN前.Click += BTN前_Click;
             // 
             // BTN回原点
             // 
@@ -109,6 +113,7 @@
             BTN回原点.TabIndex = 7;
             BTN回原点.Text = "回原点";
             BTN回原点.UseVisualStyleBackColor = true;
+            BTN回原点.Click += BTN回原点_Click;
             // 
             // BTN停止
             // 
@@ -118,6 +123,7 @@
             BTN停止.TabIndex = 8;
             BTN停止.Text = "停止";
             BTN停止.UseVisualStyleBackColor = true;
+            BTN停止.Click += BTN停止_Click;
             // 
             // BTN位置清零
             // 
@@ -132,7 +138,7 @@
             // LB轴信息
             // 
             LB轴信息.AutoSize = true;
-            LB轴信息.Location = new Point(330, 43);
+            LB轴信息.Location = new Point(281, 43);
             LB轴信息.Name = "LB轴信息";
             LB轴信息.Size = new Size(44, 17);
             LB轴信息.TabIndex = 10;
@@ -142,7 +148,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(434, 181);
             Controls.Add(LB轴信息);
             Controls.Add(BTN位置清零);
             Controls.Add(BTN停止);
@@ -156,7 +162,10 @@
             Controls.Add(MS运动控制);
             MainMenuStrip = MS运动控制;
             Name = "ManualControl";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "ManualControl";
+            FormClosing += ManualControl_FormClosing;
+            FormClosed += ManualControl_FormClosed;
             ResumeLayout(false);
             PerformLayout();
         }
