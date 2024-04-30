@@ -558,8 +558,9 @@ namespace Services
         public abstract bool RemoveAxis(string axisName);
         public abstract void Scram();
         //信号
-        public abstract double[] GetInputs(int number);
+        public abstract double[] GetInputs(int number, out bool isComplete);
         public abstract void SetInput(int num, int invert);
+        public abstract double[] GetOutputs(int number);
         public abstract void SetOutput(int num, int value);
         //AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(MotionControl))));
         //AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetType("Trio").GetInterface(""));
@@ -703,12 +704,14 @@ namespace Services
         #endregion
 
         #region IO
-        public override double[] GetInputs(int number)
+        public override double[] GetInputs(int number, out bool isComplete)
         {
             double[] ioState = new double[number];
+            isComplete = true;
             for (int i = 0; i < number; i++)
             {
-                Trio.In(i, i, out ioState[i]);
+                isComplete = Trio.In(i, i, out ioState[i]);
+                if (!isComplete) break;
             }
             return ioState;
         }
@@ -716,6 +719,11 @@ namespace Services
         public override void SetInput(int num, int invert)
         {
             Trio.InvertIn(num, invert);
+        }
+
+        public override double[] GetOutputs(int number)
+        {
+            return new double[number];
         }
 
         public override void SetOutput(int num, int value)
@@ -830,12 +838,15 @@ namespace Services
         #endregion
 
         #region IO
-        public override double[] GetInputs(int number)
+        public override double[] GetInputs(int number, out bool isComplete)
         {
             double[] inputs = new double[number];
+            isComplete = true;
             for (int i = 0; i < number; i++)
             {
-                inputs[i] = GetInput(i);
+                isComplete = GetInput(i, out uint input);
+                inputs[i] = input;
+                if (!isComplete) break;
             }
             return inputs;
         }
@@ -845,11 +856,22 @@ namespace Services
             ErrorCode = Zmcaux.ZAux_Direct_SetInvertIn(Zmotion, num, invert);
         }
 
-        public uint GetInput(int num)
+        public bool GetInput(int num, out uint input)
         {
-            uint value = 2;
-            ErrorCode = Zmcaux.ZAux_Direct_GetIn(Zmotion, num, ref value);
-            return value;
+            input = 2;
+            ErrorCode = Zmcaux.ZAux_Direct_GetIn(Zmotion, num, ref input);
+            if (ErrorCode == 0) return true;
+            return false;
+        }
+
+        public override double[] GetOutputs(int number)
+        {
+            double[] outputs = new double[number];
+            for (int i = 0; i < number; i++)
+            {
+                outputs[i] = GetOutput(i);
+            }
+            return outputs;
         }
 
         public override void SetOutput(int num, int value)
@@ -861,7 +883,7 @@ namespace Services
         {
             uint value = 2;
             ErrorCode = Zmcaux.ZAux_Direct_GetOp(Zmotion, num, ref value);
-            return value; 
+            return value;
         }
         #endregion
 

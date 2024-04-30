@@ -1,10 +1,16 @@
 ﻿using CSharpKit;
+using Services;
 
 namespace CompreDemo.Forms
 {
     public partial class MotionSetting : Form
     {
         readonly DeviceManager device = DeviceManager.Instance;
+        Task? getIO;
+        Task? testMotion;
+        CancellationTokenSource cancellation = new CancellationTokenSource();
+        //TaskFactory getInput;
+        //bool isUpdateIO = false;
 
         public MotionSetting()
         {
@@ -13,6 +19,21 @@ namespace CompreDemo.Forms
             CB轴卡.Items.Clear();
             foreach (var controller in device.Controllers!.Values)
                 CB轴卡.Items.Add(controller.Name);
+            
+        }
+
+        public static void StartTask(ref Task? task, Action action)
+        {
+            if (task == null)
+            {
+                task = new Task(action);
+            }
+            else
+            {
+                if (task.Status == TaskStatus.Running) task.Wait();
+                task = new Task(action);
+            }
+            task.Start();
         }
 
         private void UpdateInfo(string controllerName, Label label)
@@ -27,7 +48,7 @@ namespace CompreDemo.Forms
             string axes = $"{Environment.NewLine}轴列表：{Environment.NewLine}";
             for (int i = 0; i < controller.AxesName.Count; i++)
             {
-                axes += $"        {controller.AxesName[i]}  [{i}]{Environment.NewLine}";
+                axes += $"            {controller.AxesName[i]}  [{i}]{Environment.NewLine}";
             }
             label.Text = $"控制器：{controllerName}{Environment.NewLine}" +
                 $"{Environment.NewLine}IP地址：{controller.IP}{Environment.NewLine}{axes}" +
@@ -39,10 +60,34 @@ namespace CompreDemo.Forms
                 CB轴.Items.Add(axisName);
         }
 
+        private void UpdateIO(MotionControl motion, int inputCount, int outputCount)
+        {
+            while (!cancellation.IsCancellationRequested)
+            {
+                Thread.Sleep(100);
+                string input = "";
+                double[] @in = motion.GetInputs(inputCount, out bool isComplete);
+                for (int i = 0; i < @in.Length; i++)
+                {
+                    if (i % 3 == 0)
+                        input += Environment.NewLine;
+                    input += $"输入{i}：{@in[i]} ";
+                }
+                LB输入.Invoke(new Action(() => { LB输入.Text = input; }));
+            }
+        }
+
         private void CB轴卡_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (CB轴卡.Text == null) return;
             UpdateInfo(CB轴卡.Text, LB轴卡信息);
+
+            var motion = device.GetController(CB轴卡.Text);
+            if (motion == null) return;
+
+            if (getIO?.Status == TaskStatus.Running) cancellation.Cancel();
+            getIO = Task.Run(() => UpdateIO(motion, 9, 9), cancellation.Token);
+
         }
 
         private void BTN轴卡设置_Click(object sender, EventArgs e)
@@ -82,17 +127,6 @@ namespace CompreDemo.Forms
             manualControl.Show();
         }
 
-        private void TSM连接_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(CB轴卡.Text)) return;
-            device.Connect(CB轴卡.Text);
-        }
-
-        private void TSM断开_Click(object sender, EventArgs e)
-        {
-            device.Disconnect(CB轴卡.Text);
-        }
-
         private void TSM打开测试窗口_Click(object sender, EventArgs e)
         {
             var axis1 = device.GetAxis(CB轴卡.Text, TST测试轴1名称.Text);
@@ -106,9 +140,36 @@ namespace CompreDemo.Forms
         {
             var motion = device.GetController(CB轴卡.Text);
             if (motion == null) return;
-            //Task.Run(() => { DeviceManager.Track1(motion, 0, 7, 400, 50); });
+            if (testMotion != null)
+                if (!testMotion.IsCompleted)
+                {
+                    MessageBox.Show("运行中", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
 
-            Task.Run(() => { DeviceManager.Track2(motion, 300, 5, 300, 50); });
+            switch (TST轨迹.Text)
+            {
+                case "0":
+                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track1(motion, 0, 7, 400, 50)));
+                    break;
+                case "1":
+                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track2(motion, 300, 5, 300, 50)));
+                    break;
+            }
         }
+
+        private void TSM连接当前卡_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(CB轴卡.Text)) return;
+            if (device.Connect(CB轴卡.Text))
+                MessageBox.Show("连接成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void TSM断开当前卡_Click(object sender, EventArgs e)
+        {
+            device.Disconnect(CB轴卡.Text);
+            MessageBox.Show("断开连接", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
     }
 }

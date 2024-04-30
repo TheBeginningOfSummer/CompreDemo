@@ -41,7 +41,7 @@
             MS菜单.Items.AddRange(new ToolStripItem[] { TSM设置 });
             MS菜单.Location = new Point(0, 0);
             MS菜单.Name = "MS菜单";
-            MS菜单.Size = new Size(1184, 25);
+            MS菜单.Size = new Size(984, 25);
             MS菜单.TabIndex = 0;
             MS菜单.Text = "菜单";
             // 
@@ -56,14 +56,14 @@
             // TSM相机配置
             // 
             TSM相机配置.Name = "TSM相机配置";
-            TSM相机配置.Size = new Size(180, 22);
+            TSM相机配置.Size = new Size(136, 22);
             TSM相机配置.Text = "相机配置";
             TSM相机配置.Click += TSM相机配置_Click;
             // 
             // TSM控制卡配置
             // 
             TSM控制卡配置.Name = "TSM控制卡配置";
-            TSM控制卡配置.Size = new Size(180, 22);
+            TSM控制卡配置.Size = new Size(136, 22);
             TSM控制卡配置.Text = "控制卡配置";
             TSM控制卡配置.Click += TSM控制卡配置_Click;
             // 
@@ -71,7 +71,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1184, 681);
+            ClientSize = new Size(984, 561);
             Controls.Add(MS菜单);
             MainMenuStrip = MS菜单;
             Name = "MainForm";

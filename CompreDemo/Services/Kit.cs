@@ -2077,7 +2077,7 @@ namespace CSharpKit
             TargetProcess.Close();
         }
 
-        public static void StartTask(Task? task, Action action)
+        public static void StartTask(ref Task? task, Action action)
         {
             if (task == null)
             {

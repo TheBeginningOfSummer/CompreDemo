@@ -19,7 +19,7 @@ namespace CompreDemo.Forms
 
             baseAxis = axis;
             Text = $"{baseAxis.ControllerName} {baseAxis.Name} 轴号 {baseAxis.Number}";
-            Processkit.StartTask(axisState, UpdateAxisState);
+            Processkit.StartTask(ref axisState, UpdateAxisState);
         }
 
         private void UpdateAxisState()
@@ -39,14 +39,6 @@ namespace CompreDemo.Forms
                     message += $"当前速度：{baseAxis.CurrentSpeed}{Environment.NewLine}";
                     LB轴信息.Text = message;
                 }));
-
-                //double[] @in = Controllers[controllerName]?.GetInputs(inputCount);
-                //for (int i = 0; i < @in.Length; i++)
-                //{
-                //    if (i % 3 == 0) stateInfo[3] += Environment.NewLine;
-                //    stateInfo[3] += $"信号{i}：{@in[i]} ";
-                //}
-                //UpdateState?.Invoke(stateInfo);
             }
         }
 

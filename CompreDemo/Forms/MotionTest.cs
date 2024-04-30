@@ -20,7 +20,7 @@ namespace CompreDemo.Forms
             InitializeComponent();
             graphics = CreateGraphics();
             brush2 = new SolidBrush(BackColor);
-            Processkit.StartTask(drawing, () => { DrawingTrack(axis1, axis2, 100); });
+            Processkit.StartTask(ref drawing, () => { DrawingTrack(axis1, axis2, 100); });
         }
 
         private void MotionTest_Paint(object sender, PaintEventArgs e)
@@ -103,18 +103,19 @@ namespace CompreDemo.Forms
 
         public void StartDrawing(BaseAxis axis1, BaseAxis axis2)
         {
-            Processkit.StartTask(drawing, () => { DrawingTrack(axis1, axis2); });
+            Processkit.StartTask(ref drawing, () => { DrawingTrack(axis1, axis2); });
         }
 
         public void Clear()
         {
-            graphics.Clear(Color.White);
+            //graphics.Clear(Color.White);
+            Refresh();
         }
 
         private void TSM清除_Click(object sender, EventArgs e)
         {
             Clear();
-            DrawCoordinate(graphics);
+            //DrawCoordinate(graphics);
         }
     }
 }
