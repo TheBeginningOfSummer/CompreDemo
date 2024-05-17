@@ -51,7 +51,7 @@
             TB相机名称 = new TextBox();
             label1 = new Label();
             BTN添加相机 = new Button();
-            BTN触发图片 = new Button();
+            BTN捕获图片 = new Button();
             MS相机.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PB图片).BeginInit();
             CMS相机列表.SuspendLayout();
@@ -237,23 +237,23 @@
             BTN添加相机.UseVisualStyleBackColor = true;
             BTN添加相机.Click += BTN添加相机_Click;
             // 
-            // BTN触发图片
+            // BTN捕获图片
             // 
-            BTN触发图片.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            BTN触发图片.Location = new Point(688, 89);
-            BTN触发图片.Name = "BTN触发图片";
-            BTN触发图片.Size = new Size(100, 25);
-            BTN触发图片.TabIndex = 9;
-            BTN触发图片.Text = "触发图片";
-            BTN触发图片.UseVisualStyleBackColor = true;
-            BTN触发图片.Click += BTN触发图片_Click;
+            BTN捕获图片.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            BTN捕获图片.Location = new Point(688, 89);
+            BTN捕获图片.Name = "BTN捕获图片";
+            BTN捕获图片.Size = new Size(100, 25);
+            BTN捕获图片.TabIndex = 9;
+            BTN捕获图片.Text = "捕获图片";
+            BTN捕获图片.UseVisualStyleBackColor = true;
+            BTN捕获图片.Click += BTN捕获图片_Click;
             // 
             // CameraSetting
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(BTN触发图片);
+            Controls.Add(BTN捕获图片);
             Controls.Add(BTN添加相机);
             Controls.Add(label1);
             Controls.Add(TB相机名称);
@@ -299,7 +299,7 @@
         private ToolStripMenuItem TSM打开软触发;
         private ToolStripMenuItem TSM关闭触发;
         private Button BTN添加相机;
-        private Button BTN触发图片;
+        private Button BTN捕获图片;
         private ToolStripMenuItem TSM停止采集;
     }
 }

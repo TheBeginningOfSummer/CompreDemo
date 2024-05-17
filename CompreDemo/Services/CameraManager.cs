@@ -422,6 +422,11 @@ namespace Services
         public double? ExposureTime { get; set; }
         public double? Gain { get; set; }
 
+        readonly static BoundedChannelOptions boundedOptions = new(20) { FullMode = BoundedChannelFullMode.Wait };
+        public Channel<Bitmap> Images = Channel.CreateBounded<Bitmap>(boundedOptions);
+        public Action<Bitmap>? GetImages;
+        public bool IsCatchImage = false;
+
         public HuarayCamera(string userName, string key)
         {
             UserName = userName;
@@ -612,6 +617,54 @@ namespace Services
             }
             vm.Release();
         }
+        /// <summary>
+        /// （单独线程）不断向队列中加入图片
+        /// </summary>
+        /// <param name="color"></param>
+        public async void WaitImage()
+        {
+            IsCatchImage = true;
+            while (IsCatchImage)
+            {
+                if (Device == null) continue;
+                if (Device.WaitForFrameTriggerReady(out IGrabbedRawData data, 1000))
+                {
+                    //Trace.WriteLine(data.BlockID);
+                    await Images.Writer.WriteAsync(data.ToBitmap(false));
+                }
+            }
+        }
+        /// <summary>
+        /// （单独线程）不断向队列中加入图片
+        /// </summary>
+        /// <param name="color"></param>
+        public async void WaitColorImage()
+        {
+            IsCatchImage = true;
+            while (IsCatchImage)
+            {
+                if (Device == null) continue;
+                if (Device.WaitForFrameTriggerReady(out IGrabbedRawData data, 1000))
+                {
+                    //Trace.WriteLine(data.BlockID);
+                    await Images.Writer.WriteAsync(data.ToBitmap(true));
+                }
+            }
+        }
+        /// <summary>
+        /// （单独线程）从队列中读取图片，使用委托更新
+        /// </summary>
+        public async void UpdateImage()
+        {
+            while (await Images.Reader.WaitToReadAsync())
+            {
+                if (Images.Reader.TryRead(out var image))
+                {
+                    GetImages?.Invoke(image);
+                }
+            }
+        }
+
     }
 
     

@@ -1,8 +1,6 @@
 ﻿using CSharpKit.FileManagement;
 using PaddleOCRSharp;
 using Services;
-using System.Diagnostics;
-using System.Threading.Channels;
 using ThridLibray;
 
 namespace CompreDemo
@@ -37,10 +35,7 @@ namespace CompreDemo
         #endregion
 
         readonly PaddleOCREngine engine;
-        readonly static BoundedChannelOptions boundedOptions = new(20) { FullMode = BoundedChannelFullMode.Wait };
-        public Channel<IGrabbedRawData> Images = Channel.CreateBounded<IGrabbedRawData>(boundedOptions);
-        public bool IsCache = false;
-
+        
         public DeviceManager()
         {
             try
@@ -86,7 +81,7 @@ namespace CompreDemo
             {
                 camera1.OpenCamera();
                 camera1.Device?.TriggerSet.Open(TriggerSourceEnum.Software);
-                camera1.Device?.TriggerSet.Close();
+                Task.Run(camera1.WaitImage);//连续向队列中取图，用于非触发模式
             }
             else
             {
@@ -158,20 +153,6 @@ namespace CompreDemo
                 huarayCamera.CloseCamera();
                 CameraList.Remove(name);
                 SaveCameraConfig();
-            }
-        }
-
-        public async void WaitImage(IDevice device, bool color = false)
-        {
-            IsCache = true;
-            while (IsCache)
-            {
-                if (device == null) break;
-                if (device.WaitForFrameTriggerReady(out IGrabbedRawData data, 1000))
-                {
-                    Trace.WriteLine(data.BlockID);
-                    await Images.Writer.WriteAsync(data);
-                }
             }
         }
 
