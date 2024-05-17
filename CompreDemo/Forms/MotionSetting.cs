@@ -6,11 +6,8 @@ namespace CompreDemo.Forms
     public partial class MotionSetting : Form
     {
         readonly DeviceManager device = DeviceManager.Instance;
-        Task? getIO;
         Task? testMotion;
         CancellationTokenSource cancellation = new CancellationTokenSource();
-        //TaskFactory getInput;
-        //bool isUpdateIO = false;
 
         public MotionSetting()
         {
@@ -82,11 +79,11 @@ namespace CompreDemo.Forms
             if (CB轴卡.Text == null) return;
             UpdateInfo(CB轴卡.Text, LB轴卡信息);
 
-            var motion = device.GetController(CB轴卡.Text);
-            if (motion == null) return;
+            //var motion = device.GetController(CB轴卡.Text);
+            //if (motion == null) return;
 
-            if (getIO?.Status == TaskStatus.Running) cancellation.Cancel();
-            getIO = Task.Run(() => UpdateIO(motion, 9, 9), cancellation.Token);
+            //if (getIO?.Status == TaskStatus.Running) cancellation.Cancel();
+            //getIO = Task.Run(() => UpdateIO(motion, 9, 9), cancellation.Token);
 
         }
 
@@ -115,8 +112,8 @@ namespace CompreDemo.Forms
         {
             var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
             if (currentAxis == null) return;
-            Setting axissetting = new(currentAxis, "Layout1");
-            axissetting.Show();
+            Setting axisSetting = new(currentAxis, "Layout1");
+            axisSetting.Show();
         }
 
         private void BTN轴控制_Click(object sender, EventArgs e)

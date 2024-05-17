@@ -9,8 +9,6 @@ namespace CompreDemo
         public MainForm()
         {
             InitializeComponent();
-
-            device.Connect("Zmotion1");
         }
 
         private void TSMøÿ÷∆ø®≈‰÷√_Click(object sender, EventArgs e)

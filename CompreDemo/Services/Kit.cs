@@ -1615,9 +1615,14 @@ namespace CSharpKit
                 AppendFlieString(path, fileName, log, FileMode.Append);
             }
 
+            public static void AppendLog(string path, string fileName, string message)
+            {
+                string log = $"{DateTime.Now:yyy-MM-dd HH:mm:ss}\t{message}{Environment.NewLine}";
+                AppendFlieString(path, $"{DateTime.Now:yyy-MM-dd}{fileName}.log", log, FileMode.Append);
+            }
         }
         /// <summary>
-        /// 静态日志纪录类
+        /// 静态日志表格纪录类
         /// </summary>
         public class MessageRecorder
         {

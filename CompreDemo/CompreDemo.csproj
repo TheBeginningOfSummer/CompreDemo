@@ -10,18 +10,27 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
+    <Compile Remove="Services\SQLiteService.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="OpenCvSharp4" Version="4.9.0.20240103" />
+    <PackageReference Include="OpenCvSharp4.Extensions" Version="4.9.0.20240103" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.9.0.20240103" />
     <PackageReference Include="PaddleOCRSharp" Version="4.2.0" />
-    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
+    <PackageReference Include="ZXing.Net.Bindings.ImageSharp" Version="0.16.14" />
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="CLIDelegate">
+      <HintPath>libs\Huaray\x64\CLIDelegate.dll</HintPath>
+    </Reference>
     <Reference Include="MvCameraControl.Net">
       <HintPath>libs\AnyCpu\MvCameraControl.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="ThridLibray">
+      <HintPath>libs\Huaray\x64\ThridLibray.dll</HintPath>
     </Reference>
     <Reference Include="TrioPC_NET">
       <HintPath>libs\TrioPC_NET.dll</HintPath>

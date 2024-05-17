@@ -13,70 +13,28 @@ namespace CompreDemo.Forms
 
         #region 需要配置的数据
         private readonly BaseAxis? baseAxis;
+        private readonly HuarayCamera? huarayCamera;
         #endregion
+
+        readonly string settingType = "";
 
         public Setting(BaseAxis axis, string layoutName = "Layout1")
         {
-            InitializeComponent();
+            InitializeComponent(); settingType = "Axis";
             LayoutConfig = new KeyValueManager($"{layoutName}.json", "Config\\Layout");
             baseAxis = axis;
             Text = $"{baseAxis.ControllerName} {baseAxis.Name} 轴号 {baseAxis.Number}";
             InitializeControl(axis);
         }
 
-        #region 控件初始化
-        public virtual string Translate(string message)
+        public Setting(HuarayCamera camera, string layoutName = "Layout1")
         {
-            return message switch
-            {
-                "Type" => "轴类型",
-                "Units" => "脉冲当量",
-                "Sramp" => "S曲线",
-                "Speed" => "速度",
-                "Creep" => "爬行速度",
-                "JogSpeed" => "Jog速度",
-                "Accele" => "加速度",
-                "Decele" => "减速度",
-                "FastDecele" => "快速减速度",
-                "FsLimit" => "正软限位",
-                "RsLimit" => "负软限位",
-                "DatumIn" => "原点信号",
-                "ForwardIn" => "正限位信号",
-                "ReverseIn" => "负限位信号",
-                "ForwardJogIn" => "Jog正向信号",
-                "ReverseJogIn" => "Jog负向信号",
-                "FastJogIn" => "快速Jog信号",
-                _ => message,
-            };
+            InitializeComponent(); settingType = "Camera";
+            LayoutConfig = new KeyValueManager($"{layoutName}.json", "Config\\Layout");
+            huarayCamera = camera;
+            Text = camera.Key;
+            InitializeControl(huarayCamera);
         }
-
-        public virtual void InitializeControl(BaseAxis axis)
-        {
-            if (LayoutConfig == null) return;
-            if (!int.TryParse(LayoutConfig.Load("Row", "12"), out int row)) return;
-            if (!int.TryParse(LayoutConfig.Load("X", "30"), out int xInitial)) return;
-            if (!int.TryParse(LayoutConfig.Load("Y", "30"), out int yInitial)) return;
-            if (!int.TryParse(LayoutConfig.Load("XInterval", "200"), out int xInterval)) return;
-            if (!int.TryParse(LayoutConfig.Load("YInterval", "30"), out int yInterval)) return;
-            int x = xInitial;
-            int y = yInitial;
-
-            PropertyInfo[] properties = axis.GetType().GetProperties();
-            int j = 0;
-            foreach (var property in properties)
-            {
-                if (property.PropertyType == typeof(bool)) continue;
-                if (property.Name == "TargetPosition" || property.Name == "CurrentPosition" || property.Name == "CurrentSpeed") continue;
-                AddSettingBox(new Point(x, y), property.Name, property.GetValue(axis)!.ToString()!, Translate(property.Name));
-                y += yInterval; j++;
-                if (j % row == 0)
-                {
-                    x += xInterval;
-                    y = yInitial;
-                }
-            }
-        }
-        #endregion
 
         #region 控件操作
         public void AddLabel(Point point, string name)
@@ -113,6 +71,107 @@ namespace CompreDemo.Forms
             ControlList.Add(name, textBox);
         }
 
+        public string Translate(string message)
+        {
+            return message switch
+            {
+                "Type" => "轴类型",
+                "Units" => "脉冲当量",
+                "Sramp" => "S曲线",
+                "Speed" => "速度",
+                "Creep" => "爬行速度",
+                "JogSpeed" => "Jog速度",
+                "Accele" => "加速度",
+                "Decele" => "减速度",
+                "FastDecele" => "快速减速度",
+                "FsLimit" => "正软限位",
+                "RsLimit" => "负软限位",
+                "DatumIn" => "原点信号",
+                "ForwardIn" => "正限位信号",
+                "ReverseIn" => "负限位信号",
+                "ForwardJogIn" => "Jog正向信号",
+                "ReverseJogIn" => "Jog负向信号",
+                "FastJogIn" => "快速Jog信号",
+
+                "UserName" => "名称",
+                "ImageFormat" => "图片格式",
+                "ExposureTime" => "曝光时间",
+                "Gain" => "增益",
+                _ => message,
+            };
+        }
+
+        public void InitializeControl(BaseAxis axis)
+        {
+            if (LayoutConfig == null) return;
+            if (!int.TryParse(LayoutConfig.Load("Row", "12"), out int row)) return;
+            if (!int.TryParse(LayoutConfig.Load("X", "30"), out int xInitial)) return;
+            if (!int.TryParse(LayoutConfig.Load("Y", "30"), out int yInitial)) return;
+            if (!int.TryParse(LayoutConfig.Load("XInterval", "200"), out int xInterval)) return;
+            if (!int.TryParse(LayoutConfig.Load("YInterval", "30"), out int yInterval)) return;
+            int x = xInitial;
+            int y = yInitial;
+
+            PropertyInfo[] properties = axis.GetType().GetProperties();
+            int j = 0;
+            foreach (var property in properties)
+            {
+                if (property.PropertyType == typeof(bool)) continue;
+                if (property.Name == "TargetPosition" || property.Name == "CurrentPosition" || property.Name == "CurrentSpeed") continue;
+                AddSettingBox(new Point(x, y), property.Name, property.GetValue(axis)!.ToString()!, Translate(property.Name));
+                y += yInterval; j++;
+                if (j % row == 0)
+                {
+                    x += xInterval;
+                    y = yInitial;
+                }
+            }
+        }
+
+        public void InitializeControl(HuarayCamera camera)
+        {
+            if (LayoutConfig == null) return;
+            if (!int.TryParse(LayoutConfig.Load("Row", "12"), out int row)) return;
+            if (!int.TryParse(LayoutConfig.Load("X", "30"), out int xInitial)) return;
+            if (!int.TryParse(LayoutConfig.Load("Y", "30"), out int yInitial)) return;
+            if (!int.TryParse(LayoutConfig.Load("XInterval", "200"), out int xInterval)) return;
+            if (!int.TryParse(LayoutConfig.Load("YInterval", "30"), out int yInterval)) return;
+            int x = xInitial;
+            int y = yInitial;
+
+            PropertyInfo[] properties = camera.GetType().GetProperties();
+            int j = 0;
+            foreach (var property in properties)
+            {
+                if (property.Name == "Key") continue;
+                AddSettingBox(new Point(x, y), property.Name, property.GetValue(camera)!.ToString()!, Translate(property.Name));
+                y += yInterval; j++;
+                if (j % row == 0)
+                {
+                    x += xInterval;
+                    y = yInitial;
+                }
+            }
+        }
+        #endregion
+
+        #region 设置保存
+        private void AxisSave()
+        {
+            if (baseAxis == null) return;
+            PropertyInfo[] properties = baseAxis.GetType().GetProperties();
+            foreach (PropertyInfo property in properties)
+            {
+                if (ControlList.TryGetValue(property.Name, out var tb))
+                    baseAxis.SaveAxisConfig(property.Name, double.Parse(tb.Text));
+            }
+        }
+
+        private void CameraSave()
+        {
+
+        }
+
         private void BTN应用_Click(object sender, EventArgs e)
         {
 
@@ -122,12 +181,16 @@ namespace CompreDemo.Forms
         {
             try
             {
-                if (baseAxis == null) return;
-                PropertyInfo[] properties = baseAxis.GetType().GetProperties();
-                foreach (PropertyInfo property in properties)
+                switch (settingType)
                 {
-                    if (ControlList.TryGetValue(property.Name, out var tb))
-                        baseAxis.SaveAxisConfig(property.Name, double.Parse(tb.Text));
+                    case "Axis":
+                        AxisSave();
+                        break;
+                    case "Camera":
+                        CameraSave();
+                        break;
+                    default:
+                        break;
                 }
                 MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

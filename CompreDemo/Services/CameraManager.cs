@@ -1,19 +1,28 @@
 ﻿using MvCamCtrl.NET;
+using OpenCvSharp;
+using PaddleOCRSharp;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
+using ThridLibray;
 
-namespace MVSCamera
+namespace Services
 {
-    public class MVS
+    public class MVSCamera
     {
         //设备列表
         public MyCamera.MV_CC_DEVICE_INFO_LIST DeviceList;
+
+        public Dictionary<string, MyCamera.MV_CC_DEVICE_INFO> DeviceInfoList = [];
         //设备名称
-        public List<string> DeviceNames = new();
+        public List<string> DeviceNames = [];
         //当前相机
         public MyCamera? CurrentCamera;
         //错误信息
         public Action<string>? ErrorMsg;
+
+        readonly PaddleOCREngine engine;
 
         #region 图片数据存放
         uint bufferSize = 0;
@@ -22,8 +31,10 @@ namespace MVSCamera
         byte[] imageBytes = new byte[4096];
         #endregion
 
-        public MVS() {
-            
+        public MVSCamera()
+        {
+            OCRParameter oCRParameter = new();
+            engine = new PaddleOCREngine(null, oCRParameter);
         }
 
         public void GetDeviceList()
@@ -32,6 +43,7 @@ namespace MVSCamera
             // ch:创建设备列表 en:Create Device List
             GC.Collect();
             DeviceNames.Clear();
+            DeviceInfoList.Clear();
             nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref DeviceList);
             if (nRet != 0)
             {
@@ -42,56 +54,53 @@ namespace MVSCamera
             // ch:在窗体列表中显示设备名 | en:Display device name in the form list
             for (int i = 0; i < DeviceList.nDeviceNum; i++)
             {
-                MyCamera.MV_CC_DEVICE_INFO? deviceTemp = (MyCamera.MV_CC_DEVICE_INFO?)Marshal.PtrToStructure(DeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
-                if (deviceTemp == null) return;
-                MyCamera.MV_CC_DEVICE_INFO device = (MyCamera.MV_CC_DEVICE_INFO)deviceTemp;
-                if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)
+                var deviceTemp = (MyCamera.MV_CC_DEVICE_INFO?)Marshal.PtrToStructure(DeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
+                if (deviceTemp == null) continue;
+                var device = (MyCamera.MV_CC_DEVICE_INFO)deviceTemp;
+
+                if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)//GIGE
                 {
                     IntPtr buffer = Marshal.UnsafeAddrOfPinnedArrayElement(device.SpecialInfo.stGigEInfo, 0);
                     MyCamera.MV_GIGE_DEVICE_INFO? gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO?)Marshal.PtrToStructure(buffer, typeof(MyCamera.MV_GIGE_DEVICE_INFO));
                     if (gigeInfo?.chUserDefinedName != "")
                     {
-                        DeviceNames.Add("GigE: " + gigeInfo?.chUserDefinedName + " (" + gigeInfo?.chSerialNumber + ")");
-                        //cbDeviceList.Items.Add("GigE: " + gigeInfo.chUserDefinedName + " (" + gigeInfo.chSerialNumber + ")");
+                        DeviceInfoList.Add($"GigE: {gigeInfo?.chUserDefinedName} ({gigeInfo?.chSerialNumber})", device);
+                        DeviceNames.Add($"GigE: {gigeInfo?.chUserDefinedName} ({gigeInfo?.chSerialNumber})");
                     }
                     else
                     {
-                        DeviceNames.Add("GigE: " + gigeInfo?.chManufacturerName + " " + gigeInfo?.chModelName + " (" + gigeInfo?.chSerialNumber + ")");
-                        //cbDeviceList.Items.Add("GigE: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
+                        DeviceInfoList.Add($"GigE: {gigeInfo?.chManufacturerName} {gigeInfo?.chModelName} ({gigeInfo?.chSerialNumber})", device);
+                        DeviceNames.Add($"GigE: {gigeInfo?.chManufacturerName} {gigeInfo?.chModelName} ({gigeInfo?.chSerialNumber})");
                     }
                 }
-                else if (device.nTLayerType == MyCamera.MV_USB_DEVICE)
+                else if (device.nTLayerType == MyCamera.MV_USB_DEVICE)//USB
                 {
                     IntPtr buffer = Marshal.UnsafeAddrOfPinnedArrayElement(device.SpecialInfo.stUsb3VInfo, 0);
                     MyCamera.MV_USB3_DEVICE_INFO? usbInfo = (MyCamera.MV_USB3_DEVICE_INFO?)Marshal.PtrToStructure(buffer, typeof(MyCamera.MV_USB3_DEVICE_INFO));
                     if (usbInfo?.chUserDefinedName != "")
                     {
-                        DeviceNames.Add("USB: " + usbInfo?.chUserDefinedName + " (" + usbInfo?.chSerialNumber + ")");
-                        //cbDeviceList.Items.Add("USB: " + usbInfo.chUserDefinedName + " (" + usbInfo.chSerialNumber + ")");
+                        DeviceInfoList.Add($"USB: {usbInfo?.chUserDefinedName} ({usbInfo?.chSerialNumber})", device);
+                        DeviceNames.Add($"USB: {usbInfo?.chUserDefinedName} ({usbInfo?.chSerialNumber})");
                     }
                     else
                     {
-                        DeviceNames.Add("USB: " + usbInfo?.chManufacturerName + " " + usbInfo?.chModelName + " (" + usbInfo?.chSerialNumber + ")");
-                        //cbDeviceList.Items.Add("USB: " + usbInfo.chManufacturerName + " " + usbInfo.chModelName + " (" + usbInfo.chSerialNumber + ")");
+                        DeviceInfoList.Add($"USB: {usbInfo?.chManufacturerName} {usbInfo?.chModelName} ({usbInfo?.chSerialNumber})", device);
+                        DeviceNames.Add($"USB: {usbInfo?.chManufacturerName} {usbInfo?.chModelName} ({usbInfo?.chSerialNumber})");
                     }
                 }
             }
         }
 
-        public void OpenCamera(IntPtr cameraInfo)
+        public void OpenCamera(MyCamera.MV_CC_DEVICE_INFO device)
         {
             if (DeviceList.nDeviceNum == 0)
             {
                 ErrorMsg?.Invoke("No device, please select");
                 return;
             }
-            int nRet = -1;
-            MyCamera.MV_CC_DEVICE_INFO? deviceTemp = (MyCamera.MV_CC_DEVICE_INFO?)Marshal.
-                PtrToStructure(cameraInfo, typeof(MyCamera.MV_CC_DEVICE_INFO));
-            if (deviceTemp == null) return;
-            MyCamera.MV_CC_DEVICE_INFO device = (MyCamera.MV_CC_DEVICE_INFO)deviceTemp;
+
             CurrentCamera = new MyCamera();
-            nRet = CurrentCamera.MV_CC_CreateDevice_NET(ref device);
+            int nRet = CurrentCamera.MV_CC_CreateDevice_NET(ref device);
             if (nRet != MyCamera.MV_OK) return;
             nRet = CurrentCamera.MV_CC_OpenDevice_NET();
             if (nRet != MyCamera.MV_OK)
@@ -389,5 +398,221 @@ namespace MVSCamera
             }
         }
 
+        public string OCR(Bitmap bitmap)
+        {
+            var oCRResult = engine.DetectText(bitmap);
+            if (oCRResult != null)
+            {
+                var text = oCRResult.Text;
+                return text;
+            }
+            else
+            {
+                return "default";
+            }
+        }
     }
+
+    public class HuarayCamera
+    {
+        public IDevice? Device;
+        public string? UserName { get; set; }
+        public string? Key { get; set; }
+        public string? ImageFormat { get; set; }
+        public double? ExposureTime { get; set; }
+        public double? Gain { get; set; }
+
+        public HuarayCamera(string userName, string key)
+        {
+            UserName = userName;
+            Key = key;
+        }
+
+        public HuarayCamera()
+        {
+
+        }
+
+        public void Initialize()
+        {
+            Device = Enumerator.GetDeviceByKey(Key);
+        }
+
+        public bool OpenCamera(int buffer = 4)
+        {
+            if (Device == null) Initialize();
+            if (Device == null) return false;
+            if (Device.Open())
+            {
+                Device.StreamGrabber.SetBufferCount(buffer);
+                return true;
+            }
+            return false;
+        }
+
+        public bool CloseCamera()
+        {
+            if (Device == null) return false;
+            return Device.Close();
+        }
+
+        public bool SetParameter<T>(T parameter, object value)
+        {
+            if (Device == null) return false;
+            if (parameter is IEnumName enumName)
+            {
+                /* 以设置图像格式为例（枚举型节点）。m_dev 为已连接上的相机对象（类型：IDevice） */
+                using (IEnumParameter p = Device.ParameterCollection[enumName])
+                {
+                    /* 属性设置 */
+                    return p.SetValue(value.ToString());
+                    /* 属性读取 */
+                    //string strFormat = p.GetValue();
+                }
+            }
+            else if (parameter is IIntegerName intName)
+            {
+                using (IIntegraParameter p = Device.ParameterCollection[intName])
+                {
+                    /* 属性设置 */
+                    return p.SetValue((int)value);
+                }
+            }
+            else if (parameter is IFloatName floatName)
+            {
+                using (IFloatParameter p = Device.ParameterCollection[floatName])
+                {
+                    /* 属性设置 */
+                    return p.SetValue((double)value);
+                }
+            }
+            else if (parameter is IStringName stringName)
+            {
+                using (IStringParameter p = Device.ParameterCollection[stringName])
+                {
+                    /* 属性设置 */
+                    return p.SetValue(value.ToString());
+                }
+            }
+            else if (parameter is IBooleanName boolName)
+            {
+                using (IBooleanParameter p = Device.ParameterCollection[boolName])
+                {
+                    /* 属性设置 */
+                    return p.SetValue((bool)value);
+                }
+            }
+            else if (parameter is ICommandName commandName)
+            {
+                using (ICommandParameter p = Device.ParameterCollection[commandName])
+                {
+                    /* 运行 */
+                    return p.Execute();
+                }
+            }
+            return false;
+        }
+
+        public object? GetParameterValue<T>(T parameter)
+        {
+            if (Device == null) return default;
+            if (parameter is IEnumName enumName)
+            {
+                /* 以设置图像格式为例（枚举型节点）。m_dev 为已连接上的相机对象（类型：IDevice） */
+                using (IEnumParameter p = Device.ParameterCollection[enumName])
+                {
+                    /* 属性读取 */
+                    return p.GetValue();
+                }
+            }
+            else if (parameter is IIntegerName intName)
+            {
+                using (IIntegraParameter p = Device.ParameterCollection[intName])
+                {
+                    return p.GetValue();
+                }
+            }
+            else if (parameter is IFloatName floatName)
+            {
+                using (IFloatParameter p = Device.ParameterCollection[floatName])
+                {
+                    return p.GetValue();
+                }
+            }
+            else if (parameter is IStringName stringName)
+            {
+                using (IStringParameter p = Device.ParameterCollection[stringName])
+                {
+                    return p.GetValue();
+                }
+            }
+            else if (parameter is IBooleanName boolName)
+            {
+                using (IBooleanParameter p = Device.ParameterCollection[boolName])
+                {
+                    return p.GetValue();
+                }
+            }
+            return default;
+        }
+
+        public bool StartGrab()
+        {
+            if (Device == null) return false;
+            if (Device.StreamGrabber.Start(GrabStrategyEnum.grabStrartegySequential, GrabLoop.ProvidedByUser))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public bool StopGrab()
+        {
+            //CurrentCamera.StreamGrabber.ImageGrabbed -= StreamGrabber_ImageGrabbed;
+            if (Device == null) return false;
+            return Device.ShutdownGrab();
+        }
+
+        public void SaveImage(string path, bool color = false)
+        {
+            if (Device == null) return;
+            if (Device.WaitForFrameTriggerReady(out IGrabbedRawData data, 1000))
+            {
+                Trace.WriteLine(data.BlockID);
+                data.ToBitmap(color).Save(path);
+            }
+        }
+
+        public Bitmap? CatchImage(bool color = false)
+        {
+            if (Device == null) return default;
+            if (Device.WaitForFrameTriggerReady(out IGrabbedRawData data, 1000))
+            {
+                Trace.WriteLine(data.BlockID);
+                return data.ToBitmap(color);
+            }
+            return default;
+        }
+
+        public void Record(string path, double fps)
+        {
+            if (Device == null) return;
+            FourCC fourCC = new(FourCC.MP4V);
+            var vm = new VideoWriter(path, fourCC, fps, new OpenCvSharp.Size(1920, 1080));
+            while (true)
+            {
+                if (Device.WaitForFrameTriggerReady(out IGrabbedRawData data, 1000))
+                {
+                    Trace.WriteLine(data.BlockID);
+                    var image = InputArray.Create(data.Image);
+                    vm.Write(image);
+                }
+                else
+                { break; }
+            }
+            vm.Release();
+        }
+    }
+
+    
 }
