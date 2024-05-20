@@ -7,6 +7,7 @@ namespace CompreDemo.Forms
 {
     public partial class CameraSetting : Form
     {
+        readonly OpenFileDialog ofd = new();
         readonly DeviceManager device = DeviceManager.Instance;
         HuarayCamera? selectedCamera;
         Bitmap? currentImage;
@@ -148,6 +149,17 @@ namespace CompreDemo.Forms
                 return true;
             }
         }
+
+        private Bitmap? OpenPicture()
+        {
+            ofd.Filter = "*.*|*.bmp;*.jpg;*.png";
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                Bitmap bitmap = new(ofd.FileName);
+                return bitmap;
+            }
+            return default;
+        }
         #endregion
 
         #region 链接事件
@@ -242,6 +254,14 @@ namespace CompreDemo.Forms
                 Mat roiMat = new(image, new Rect(roi[0], roi[1], roi[2], roi[3]));
                 PB图片.Image = BitmapConverter.ToBitmap(roiMat);
             }
+        }
+
+        private void TSM打开图片_Click(object sender, EventArgs e)
+        {
+            currentImage = OpenPicture();
+            Mat image = BitmapConverter.ToMat(currentImage!);
+            image.CopyTo(drewImage);
+            PB图片.Image = currentImage;
         }
 
         private void TSM识别_Click(object sender, EventArgs e)
@@ -396,6 +416,5 @@ namespace CompreDemo.Forms
             selectedCamera?.StopGrab();
         }
 
-        
     }
 }

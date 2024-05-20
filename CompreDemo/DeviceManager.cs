@@ -82,6 +82,7 @@ namespace CompreDemo
                 camera1.OpenCamera();
                 camera1.Device?.TriggerSet.Open(TriggerSourceEnum.Software);
                 //Task.Run(camera1.WaitImage);//连续向队列中取图，用于非触发模式
+                
             }
             else
             {
@@ -140,7 +141,7 @@ namespace CompreDemo
         public void AddCamera(string name, string key)
         {
             HuarayCamera huarayCamera = new(name, key);
-            huarayCamera.Initialize();
+            huarayCamera.GetDevice();
             CameraList?.Add(name, huarayCamera);
             SaveCameraConfig();
         }
@@ -155,28 +156,6 @@ namespace CompreDemo
                 SaveCameraConfig();
             }
         }
-
-        #region 链接事件
-        //相机打开回调
-        public void OnCameraOpen(object? sender, EventArgs e)
-        {
-            var device = (IDevice?)sender;
-
-        }
-        //相机丢失回调
-        public void OnConnectLoss(object? sender, EventArgs e)
-        {
-            var device = (IDevice?)sender;
-            device?.ShutdownGrab();
-            device?.Close();
-            device?.Dispose();
-        }
-        //相机关闭回调
-        public void OnCameraClose(object? sender, EventArgs e)
-        {
-            var device = (IDevice?)sender;
-        }
-        #endregion
 
         #endregion
 

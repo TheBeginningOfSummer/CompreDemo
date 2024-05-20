@@ -1,4 +1,5 @@
 ﻿using CSharpKit.DataManagement;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -1069,13 +1070,12 @@ namespace CSharpKit
 
             public static object? ConvertTo(this IConvertible value, Type valueType)
             {
-                var t = valueType;
-
-                if (t.IsGenericType && t.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+                if (valueType.IsGenericType && valueType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
                 {
-                    if (null == value) return null;
-                    t = Nullable.GetUnderlyingType(t);
-                    return Convert.ChangeType(value, t);
+                    if (value == null) return null;
+                    //t = Nullable.GetUnderlyingType(t);
+                    NullableConverter nullableConverter = new(valueType);
+                    return Convert.ChangeType(value, nullableConverter.UnderlyingType);
                 }
                 return Convert.ChangeType(value, valueType);
             }

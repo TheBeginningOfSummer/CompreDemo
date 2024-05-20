@@ -438,21 +438,19 @@ namespace Services
 
         }
 
-        public void Initialize()
+        public void GetDevice()
         {
             Device = Enumerator.GetDeviceByKey(Key);
         }
 
         public bool OpenCamera(int buffer = 4)
         {
-            if (Device == null) Initialize();
+            if (Device == null) GetDevice();
             if (Device == null) return false;
             if (Device.Open())
             {
                 Device.StreamGrabber.SetBufferCount(buffer);
-                SetParameter(ParametrizeNameSet.ImagePixelFormat, ImageFormat);
-                SetParameter(ParametrizeNameSet.ExposureTime, ExposureTime);
-                SetParameter(ParametrizeNameSet.GainRaw, Gain);
+                SetAllParameter();
                 return true;
             }
             return false;
@@ -565,6 +563,13 @@ namespace Services
             return default;
         }
 
+        public void SetAllParameter()
+        {
+            SetParameter(ParametrizeNameSet.ImagePixelFormat, ImageFormat);
+            SetParameter(ParametrizeNameSet.ExposureTime, ExposureTime);
+            SetParameter(ParametrizeNameSet.GainRaw, Gain);
+        }
+
         public bool StartGrab()
         {
             if (Device == null) return false;
@@ -594,6 +599,7 @@ namespace Services
 
         public Bitmap? CatchImage(bool color = false)
         {
+            if (Device == null) GetDevice();
             if (Device == null) return default;
             if (Device.WaitForFrameTriggerReady(out IGrabbedRawData data, 1000))
             {

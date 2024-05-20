@@ -190,7 +190,33 @@ namespace CompreDemo.Forms
 
         private void BTN应用_Click(object sender, EventArgs e)
         {
-
+            try
+            {
+                switch (settingType)
+                {
+                    case "Axis":
+                        //AxisSave();
+                        break;
+                    case "Camera":
+                        if (huarayCamera == null) return;
+                        PropertyInfo[] properties = huarayCamera.GetType().GetProperties();
+                        foreach (PropertyInfo property in properties)
+                        {
+                            if (ControlList.TryGetValue(property.Name, out var tb))
+                                property.SetValue(huarayCamera, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
+                        }
+                        huarayCamera?.SetAllParameter();
+                        //CameraSave();
+                        break;
+                    default:
+                        break;
+                }
+                MessageBox.Show("应用成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void BTN保存_Click(object sender, EventArgs e)
