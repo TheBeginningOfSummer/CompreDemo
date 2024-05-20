@@ -450,6 +450,9 @@ namespace Services
             if (Device.Open())
             {
                 Device.StreamGrabber.SetBufferCount(buffer);
+                SetParameter(ParametrizeNameSet.ImagePixelFormat, ImageFormat);
+                SetParameter(ParametrizeNameSet.ExposureTime, ExposureTime);
+                SetParameter(ParametrizeNameSet.GainRaw, Gain);
                 return true;
             }
             return false;
@@ -461,9 +464,10 @@ namespace Services
             return Device.Close();
         }
 
-        public bool SetParameter<T>(T parameter, object value)
+        public bool SetParameter<T>(T parameter, object? value)
         {
             if (Device == null) return false;
+            if (value == null) return false;
             if (parameter is IEnumName enumName)
             {
                 /* 以设置图像格式为例（枚举型节点）。m_dev 为已连接上的相机对象（类型：IDevice） */

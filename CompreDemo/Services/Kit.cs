@@ -1059,6 +1059,27 @@ namespace CSharpKit
 
     namespace DataManagement
     {
+        public static class ConvertionExtensions
+        {
+            public static T? ConvertTo<T>(this IConvertible value) where T : struct
+            {
+                if (null == value) return null;
+                return (T?)Convert.ChangeType(value, typeof(T));
+            }
+
+            public static object? ConvertTo(this IConvertible value, Type valueType)
+            {
+                var t = valueType;
+
+                if (t.IsGenericType && t.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+                {
+                    if (null == value) return null;
+                    t = Nullable.GetUnderlyingType(t);
+                    return Convert.ChangeType(value, t);
+                }
+                return Convert.ChangeType(value, valueType);
+            }
+        }
         /// <summary>
         /// 静态数据转换类
         /// </summary>

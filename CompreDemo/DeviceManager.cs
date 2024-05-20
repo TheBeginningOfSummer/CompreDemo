@@ -81,7 +81,7 @@ namespace CompreDemo
             {
                 camera1.OpenCamera();
                 camera1.Device?.TriggerSet.Open(TriggerSourceEnum.Software);
-                Task.Run(camera1.WaitImage);//连续向队列中取图，用于非触发模式
+                //Task.Run(camera1.WaitImage);//连续向队列中取图，用于非触发模式
             }
             else
             {

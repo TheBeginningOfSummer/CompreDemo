@@ -1,4 +1,5 @@
-﻿using CSharpKit.FileManagement;
+﻿using CSharpKit.DataManagement;
+using CSharpKit.FileManagement;
 using Services;
 using System.Reflection;
 
@@ -71,7 +72,7 @@ namespace CompreDemo.Forms
             ControlList.Add(name, textBox);
         }
 
-        public string Translate(string message)
+        public static string Translate(string message)
         {
             return message switch
             {
@@ -94,6 +95,7 @@ namespace CompreDemo.Forms
                 "FastJogIn" => "快速Jog信号",
 
                 "UserName" => "名称",
+                "Key" => "键值",
                 "ImageFormat" => "图片格式",
                 "ExposureTime" => "曝光时间",
                 "Gain" => "增益",
@@ -143,8 +145,15 @@ namespace CompreDemo.Forms
             int j = 0;
             foreach (var property in properties)
             {
-                if (property.Name == "Key") continue;
-                AddSettingBox(new Point(x, y), property.Name, property.GetValue(camera)!.ToString()!, Translate(property.Name));
+                if (property.Name == "UserName" || property.Name == "Key")
+                {
+                    AddLabel(new Point(x, y), $"{Translate(property.Name)}：{property.GetValue(camera)}");
+                }
+                else
+                {
+                    string value = property.GetValue(camera) == null ? "" : property.GetValue(camera)!.ToString()!;
+                    AddSettingBox(new Point(x, y), property.Name, value, Translate(property.Name));
+                }
                 y += yInterval; j++;
                 if (j % row == 0)
                 {
@@ -169,7 +178,14 @@ namespace CompreDemo.Forms
 
         private void CameraSave()
         {
-
+            if (huarayCamera == null) return;
+            PropertyInfo[] properties = huarayCamera.GetType().GetProperties();
+            foreach (PropertyInfo property in properties)
+            {
+                if (ControlList.TryGetValue(property.Name, out var tb))
+                    property.SetValue(huarayCamera, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
+            }
+            DeviceManager.Instance.SaveCameraConfig();
         }
 
         private void BTN应用_Click(object sender, EventArgs e)

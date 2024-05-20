@@ -367,6 +367,13 @@ namespace CompreDemo.Forms
             }
         }
 
+        private void TSM参数设置_Click(object sender, EventArgs e)
+        {
+            if (selectedCamera == null) return;
+            Setting cameraSetting = new(selectedCamera);
+            cameraSetting.Show();
+        }
+
         private void TSM删除_Click(object sender, EventArgs e)
         {
             try
@@ -389,5 +396,6 @@ namespace CompreDemo.Forms
             selectedCamera?.StopGrab();
         }
 
+        
     }
 }
