@@ -50,8 +50,8 @@
             Controls.Add(BTN清除);
             HelpButton = true;
             Name = "MotionTest";
-            ShowInTaskbar = false;
             Text = "MotionTest";
+            WindowState = FormWindowState.Maximized;
             FormClosing += MotionTest_FormClosing;
             Paint += MotionTest_Paint;
             ResumeLayout(false);

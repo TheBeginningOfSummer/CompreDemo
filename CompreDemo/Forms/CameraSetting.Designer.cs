@@ -31,11 +31,11 @@
             components = new System.ComponentModel.Container();
             MS相机 = new MenuStrip();
             TSM设置 = new ToolStripMenuItem();
+            TSM添加相机 = new ToolStripMenuItem();
             TSM选择区域 = new ToolStripMenuItem();
-            TSM打开软触发 = new ToolStripMenuItem();
-            TSM关闭触发 = new ToolStripMenuItem();
             TSM测试 = new ToolStripMenuItem();
             TSM截取区域 = new ToolStripMenuItem();
+            TSM打开图片 = new ToolStripMenuItem();
             TSM识别 = new ToolStripMenuItem();
             CB相机列表 = new ComboBox();
             BTN查找设备 = new Button();
@@ -48,12 +48,10 @@
             TSM开始采集 = new ToolStripMenuItem();
             TSM停止采集 = new ToolStripMenuItem();
             TSM参数设置 = new ToolStripMenuItem();
+            TSM打开软触发 = new ToolStripMenuItem();
+            TSM关闭触发 = new ToolStripMenuItem();
             TSM删除 = new ToolStripMenuItem();
-            TB相机名称 = new TextBox();
-            label1 = new Label();
-            BTN添加相机 = new Button();
             BTN捕获图片 = new Button();
-            TSM打开图片 = new ToolStripMenuItem();
             MS相机.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PB图片).BeginInit();
             CMS相机列表.SuspendLayout();
@@ -70,31 +68,24 @@
             // 
             // TSM设置
             // 
-            TSM设置.DropDownItems.AddRange(new ToolStripItem[] { TSM选择区域, TSM打开软触发, TSM关闭触发 });
+            TSM设置.DropDownItems.AddRange(new ToolStripItem[] { TSM添加相机, TSM选择区域 });
             TSM设置.Name = "TSM设置";
             TSM设置.Size = new Size(44, 21);
             TSM设置.Text = "设置";
             // 
+            // TSM添加相机
+            // 
+            TSM添加相机.Name = "TSM添加相机";
+            TSM添加相机.Size = new Size(124, 22);
+            TSM添加相机.Text = "添加相机";
+            TSM添加相机.Click += TSM添加相机_Click;
+            // 
             // TSM选择区域
             // 
             TSM选择区域.Name = "TSM选择区域";
-            TSM选择区域.Size = new Size(136, 22);
+            TSM选择区域.Size = new Size(124, 22);
             TSM选择区域.Text = "选择区域";
             TSM选择区域.Click += TSM选择区域_Click;
-            // 
-            // TSM打开软触发
-            // 
-            TSM打开软触发.Name = "TSM打开软触发";
-            TSM打开软触发.Size = new Size(136, 22);
-            TSM打开软触发.Text = "打开软触发";
-            TSM打开软触发.Click += TSM打开软触发_Click;
-            // 
-            // TSM关闭触发
-            // 
-            TSM关闭触发.Name = "TSM关闭触发";
-            TSM关闭触发.Size = new Size(136, 22);
-            TSM关闭触发.Text = "关闭触发";
-            TSM关闭触发.Click += TSM关闭触发_Click;
             // 
             // TSM测试
             // 
@@ -106,14 +97,21 @@
             // TSM截取区域
             // 
             TSM截取区域.Name = "TSM截取区域";
-            TSM截取区域.Size = new Size(180, 22);
+            TSM截取区域.Size = new Size(124, 22);
             TSM截取区域.Text = "截取区域";
             TSM截取区域.Click += TSM截取区域_Click;
+            // 
+            // TSM打开图片
+            // 
+            TSM打开图片.Name = "TSM打开图片";
+            TSM打开图片.Size = new Size(124, 22);
+            TSM打开图片.Text = "打开图片";
+            TSM打开图片.Click += TSM打开图片_Click;
             // 
             // TSM识别
             // 
             TSM识别.Name = "TSM识别";
-            TSM识别.Size = new Size(180, 22);
+            TSM识别.Size = new Size(124, 22);
             TSM识别.Text = "识别";
             TSM识别.Click += TSM识别_Click;
             // 
@@ -163,93 +161,79 @@
             LB相机列表.FormattingEnabled = true;
             LB相机列表.HorizontalScrollbar = true;
             LB相机列表.ItemHeight = 17;
-            LB相机列表.Location = new Point(10, 62);
+            LB相机列表.Location = new Point(10, 28);
             LB相机列表.Margin = new Padding(1);
             LB相机列表.Name = "LB相机列表";
-            LB相机列表.Size = new Size(168, 378);
+            LB相机列表.Size = new Size(168, 412);
             LB相机列表.TabIndex = 5;
-            LB相机列表.SelectedIndexChanged += LB相机列表_SelectedIndexChanged;
             // 
             // CMS相机列表
             // 
-            CMS相机列表.Items.AddRange(new ToolStripItem[] { TSM连接断开, TSM断开, TSM开始采集, TSM停止采集, TSM参数设置, TSM删除 });
+            CMS相机列表.Items.AddRange(new ToolStripItem[] { TSM连接断开, TSM断开, TSM开始采集, TSM停止采集, TSM参数设置, TSM打开软触发, TSM关闭触发, TSM删除 });
             CMS相机列表.Name = "CMS相机列表";
-            CMS相机列表.Size = new Size(125, 136);
+            CMS相机列表.Size = new Size(137, 180);
             CMS相机列表.Text = "相机列表";
             // 
             // TSM连接断开
             // 
             TSM连接断开.Name = "TSM连接断开";
-            TSM连接断开.Size = new Size(124, 22);
+            TSM连接断开.Size = new Size(136, 22);
             TSM连接断开.Text = "连接";
             TSM连接断开.Click += TSM连接_Click;
             // 
             // TSM断开
             // 
             TSM断开.Name = "TSM断开";
-            TSM断开.Size = new Size(124, 22);
+            TSM断开.Size = new Size(136, 22);
             TSM断开.Text = "断开";
             TSM断开.Click += TSM断开_Click;
             // 
             // TSM开始采集
             // 
             TSM开始采集.Name = "TSM开始采集";
-            TSM开始采集.Size = new Size(124, 22);
+            TSM开始采集.Size = new Size(136, 22);
             TSM开始采集.Text = "开始采集";
             TSM开始采集.Click += TSM开始采集_Click;
             // 
             // TSM停止采集
             // 
             TSM停止采集.Name = "TSM停止采集";
-            TSM停止采集.Size = new Size(124, 22);
+            TSM停止采集.Size = new Size(136, 22);
             TSM停止采集.Text = "停止采集";
             TSM停止采集.Click += TSM停止采集_Click;
             // 
             // TSM参数设置
             // 
             TSM参数设置.Name = "TSM参数设置";
-            TSM参数设置.Size = new Size(124, 22);
+            TSM参数设置.Size = new Size(136, 22);
             TSM参数设置.Text = "参数设置";
             TSM参数设置.Click += TSM参数设置_Click;
+            // 
+            // TSM打开软触发
+            // 
+            TSM打开软触发.Name = "TSM打开软触发";
+            TSM打开软触发.Size = new Size(136, 22);
+            TSM打开软触发.Text = "打开软触发";
+            TSM打开软触发.Click += TSM打开软触发_Click;
+            // 
+            // TSM关闭触发
+            // 
+            TSM关闭触发.Name = "TSM关闭触发";
+            TSM关闭触发.Size = new Size(136, 22);
+            TSM关闭触发.Text = "关闭触发";
+            TSM关闭触发.Click += TSM关闭触发_Click;
             // 
             // TSM删除
             // 
             TSM删除.Name = "TSM删除";
-            TSM删除.Size = new Size(124, 22);
+            TSM删除.Size = new Size(136, 22);
             TSM删除.Text = "删除";
             TSM删除.Click += TSM删除_Click;
-            // 
-            // TB相机名称
-            // 
-            TB相机名称.Location = new Point(70, 28);
-            TB相机名称.Name = "TB相机名称";
-            TB相机名称.Size = new Size(106, 23);
-            TB相机名称.TabIndex = 6;
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(12, 31);
-            label1.Name = "label1";
-            label1.Size = new Size(56, 17);
-            label1.TabIndex = 7;
-            label1.Text = "相机名称";
-            // 
-            // BTN添加相机
-            // 
-            BTN添加相机.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            BTN添加相机.Location = new Point(688, 58);
-            BTN添加相机.Name = "BTN添加相机";
-            BTN添加相机.Size = new Size(100, 25);
-            BTN添加相机.TabIndex = 8;
-            BTN添加相机.Text = "添加相机";
-            BTN添加相机.UseVisualStyleBackColor = true;
-            BTN添加相机.Click += BTN添加相机_Click;
             // 
             // BTN捕获图片
             // 
             BTN捕获图片.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            BTN捕获图片.Location = new Point(688, 89);
+            BTN捕获图片.Location = new Point(688, 58);
             BTN捕获图片.Name = "BTN捕获图片";
             BTN捕获图片.Size = new Size(100, 25);
             BTN捕获图片.TabIndex = 9;
@@ -257,22 +241,12 @@
             BTN捕获图片.UseVisualStyleBackColor = true;
             BTN捕获图片.Click += BTN捕获图片_Click;
             // 
-            // TSM打开图片
-            // 
-            TSM打开图片.Name = "TSM打开图片";
-            TSM打开图片.Size = new Size(180, 22);
-            TSM打开图片.Text = "打开图片";
-            TSM打开图片.Click += TSM打开图片_Click;
-            // 
             // CameraSetting
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
             Controls.Add(BTN捕获图片);
-            Controls.Add(BTN添加相机);
-            Controls.Add(label1);
-            Controls.Add(TB相机名称);
             Controls.Add(LB相机列表);
             Controls.Add(PB图片);
             Controls.Add(TB信息);
@@ -302,8 +276,6 @@
         private ToolStripMenuItem TSM测试;
         private PictureBox PB图片;
         private ListBox LB相机列表;
-        private TextBox TB相机名称;
-        private Label label1;
         private ToolStripMenuItem TSM截取区域;
         private ToolStripMenuItem TSM识别;
         private ToolStripMenuItem TSM选择区域;
@@ -312,12 +284,12 @@
         private ToolStripMenuItem TSM删除;
         private ToolStripMenuItem TSM开始采集;
         private ToolStripMenuItem TSM断开;
-        private ToolStripMenuItem TSM打开软触发;
-        private ToolStripMenuItem TSM关闭触发;
-        private Button BTN添加相机;
         private Button BTN捕获图片;
         private ToolStripMenuItem TSM停止采集;
         private ToolStripMenuItem TSM参数设置;
         private ToolStripMenuItem TSM打开图片;
+        private ToolStripMenuItem TSM打开软触发;
+        private ToolStripMenuItem TSM关闭触发;
+        private ToolStripMenuItem TSM添加相机;
     }
 }

@@ -2,6 +2,8 @@
 using OpenCvSharp;
 using Services;
 using ThridLibray;
+using CSharpKit.FileManagement;
+using Microsoft.VisualBasic;
 
 namespace CompreDemo.Forms
 {
@@ -9,8 +11,23 @@ namespace CompreDemo.Forms
     {
         readonly OpenFileDialog ofd = new();
         readonly DeviceManager device = DeviceManager.Instance;
+
         HuarayCamera? selectedCamera;
-        Bitmap? currentImage;
+        HuarayCamera? SelectedCamera
+        {
+            get
+            {
+                string[] message = LB相机列表.Text.Split('-');
+                if (device.CameraList!.TryGetValue(message[0], out selectedCamera))
+                    return selectedCamera;
+                return null;
+            }
+            set
+            {
+                selectedCamera = value;
+            }
+        }
+        Bitmap? CurrentImage { get; set; }
 
         #region 区域选定
         public MouseCallback MouseCallbackEvent;
@@ -25,7 +42,7 @@ namespace CompreDemo.Forms
         //绘制的窗口
         private Window? window;
         //绘制的坐标
-        readonly int[] roi = [0, 0, 10, 10];
+        readonly int[] currentROI = [0, 0, 10, 10];
         #endregion
 
         public CameraSetting()
@@ -63,13 +80,21 @@ namespace CompreDemo.Forms
             {
                 int width = EndPoint.X - StartPoint.X;
                 int height = EndPoint.Y - StartPoint.Y;
-                roi[0] = StartPoint.X; roi[1] = StartPoint.Y;
-                roi[2] = width; roi[3] = height;
+                currentROI[0] = StartPoint.X; currentROI[1] = StartPoint.Y;
+                currentROI[2] = width; currentROI[3] = height;
                 if (width > 0 && height > 0)
                 {
                     drawingImage.CopyTo(drewImage);
                     window?.ShowImage(drewImage);
-                    FormMethod.ShowInfoBox($"选定范围：[{roi[0]} ,{roi[1]} ,{width} ,{height}]");
+                    string input = Interaction.InputBox($"选定范围为[{currentROI[0]} ,{currentROI[1]} ,{width} ,{height}]，请输入ROI名称：", "提示", "ROI1");
+                    if (!string.IsNullOrEmpty(input))
+                    {
+                        int[] roi = new int[4];
+                        currentROI.CopyTo(roi, 0);
+                        if (!device.ROIList.TryAdd(input, roi))
+                            device.ROIList[input] = roi;
+                        DeviceManager.SaveConfig("Cameras", "ROIList.json", device.ROIList);
+                    }
                     window?.Dispose();
                 }
             }
@@ -96,24 +121,6 @@ namespace CompreDemo.Forms
             LB相机列表.Items.Clear();
             foreach (var camera in device.CameraList)
                 LB相机列表.Items.Add($"{camera.Key}-{camera.Value.Key}");
-        }
-        /// <summary>
-        /// 得到当前选定的相机
-        /// </summary>
-        /// <param name="selectedItem"></param>
-        private void GetSelectedCamera(string? selectedItem)
-        {
-            if (string.IsNullOrEmpty(selectedItem))
-            {
-                FormMethod.ShowInfoBox("当前选定相机名称不正确。");
-                return;
-            }
-            string[] message = selectedItem.Split('-');
-            selectedCamera?.CloseCamera();
-            if (!device.CameraList!.TryGetValue(message[0], out selectedCamera))
-            {
-                FormMethod.ShowInfoBox("无法在设备相机列表中找到相机。");
-            }
         }
         /// <summary>
         /// 得到所有相机，并更新到下拉列表
@@ -196,34 +203,42 @@ namespace CompreDemo.Forms
         #endregion
 
         #region 相机
-        private void LB相机列表_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var listBox = (ListBox)sender;
-            GetSelectedCamera((string?)listBox.SelectedItem);
-        }
-
         private void BTN查找设备_Click(object sender, EventArgs e)
         {
             UpdateCameraCB();
         }
 
-        private void BTN添加相机_Click(object sender, EventArgs e)
+        private void BTN捕获图片_Click(object sender, EventArgs e)
+        {
+            if (CheckItem(SelectedCamera, "没有选定相机。"))
+            {
+                SelectedCamera!.Device?.ExecuteSoftwareTrigger();
+                CurrentImage = SelectedCamera.CatchImage();
+                if (CheckItem(CurrentImage, "相机捕获图片失败，请连接相机并开启采集。"))
+                {
+                    Mat image = BitmapConverter.ToMat(CurrentImage!);
+                    image.CopyTo(drewImage);
+                    PB图片.Image = CurrentImage;
+                }
+            }
+        }
+
+        private void TSM添加相机_Click(object sender, EventArgs e)
         {
             try
             {
-                if (string.IsNullOrEmpty(TB相机名称.Text))
-                {
-                    FormMethod.ShowInfoBox("输入名称。");
-                    return;
-                }
                 if (string.IsNullOrEmpty(CB相机列表.Text))
                 {
                     FormMethod.ShowInfoBox("没有选定相机。");
                     return;
                 }
-                device.AddCamera(TB相机名称.Text, CB相机列表.Text);
-                UpdateCameraLB();
-                FormMethod.ShowInfoBox("已保存。");
+                string input = Interaction.InputBox($"选定设备为[{CB相机列表.Text}]，请输入相机名称：", "提示", "cam1");
+                if (!string.IsNullOrEmpty(input))
+                {
+                    device.AddCamera(input, CB相机列表.Text);
+                    UpdateCameraLB();
+                    FormMethod.ShowInfoBox("已保存。");
+                }
             }
             catch (Exception ex)
             {
@@ -231,45 +246,30 @@ namespace CompreDemo.Forms
             }
         }
 
-        private void BTN捕获图片_Click(object sender, EventArgs e)
-        {
-            if (CheckItem(selectedCamera, "没有选定相机。"))
-            {
-                selectedCamera!.Device?.ExecuteSoftwareTrigger();
-                currentImage = selectedCamera.CatchImage();
-                if (CheckItem(currentImage, "相机捕获图片失败，请重新链接相机，开启采集。"))
-                {
-                    Mat image = BitmapConverter.ToMat(currentImage!);
-                    image.CopyTo(drewImage);
-                    PB图片.Image = currentImage;
-                }
-            }
-        }
-
         private void TSM截取区域_Click(object sender, EventArgs e)
         {
-            if (CheckItem(currentImage, "截取图片为空。"))
+            if (CheckItem(CurrentImage, "截取图片为空。"))
             {
-                Mat image = BitmapConverter.ToMat(currentImage!);
-                Mat roiMat = new(image, new Rect(roi[0], roi[1], roi[2], roi[3]));
+                Mat image = BitmapConverter.ToMat(CurrentImage!);
+                Mat roiMat = new(image, new Rect(currentROI[0], currentROI[1], currentROI[2], currentROI[3]));
                 PB图片.Image = BitmapConverter.ToBitmap(roiMat);
             }
         }
 
         private void TSM打开图片_Click(object sender, EventArgs e)
         {
-            currentImage = OpenPicture();
-            Mat image = BitmapConverter.ToMat(currentImage!);
+            CurrentImage = OpenPicture();
+            Mat image = BitmapConverter.ToMat(CurrentImage!);
             image.CopyTo(drewImage);
-            PB图片.Image = currentImage;
+            PB图片.Image = CurrentImage;
         }
 
         private void TSM识别_Click(object sender, EventArgs e)
         {
-            if (CheckItem(currentImage, "识别图片为空。"))
+            if (CheckItem(CurrentImage, "识别图片为空。"))
             {
-                Mat image = BitmapConverter.ToMat(currentImage!);
-                Mat roiMat = new(image, new Rect(roi[0], roi[1], roi[2], roi[3]));
+                Mat image = BitmapConverter.ToMat(CurrentImage!);
+                Mat roiMat = new(image, new Rect(currentROI[0], currentROI[1], currentROI[2], currentROI[3]));
                 ShowMessage(device.OCR(roiMat.ToBitmap()));
             }
         }
@@ -278,16 +278,17 @@ namespace CompreDemo.Forms
         {
             window = new Window("选择区域");
             window.SetMouseCallback(MouseCallbackEvent);
+            window.Move(100, 100);
             window?.ShowImage(drewImage);
         }
 
         private void TSM打开软触发_Click(object sender, EventArgs e)
         {
-            if (CheckItem(selectedCamera, "没有选定相机。"))
+            if (CheckItem(SelectedCamera, "没有选定相机。"))
             {
-                if (CheckItem(selectedCamera!.Device, "相机连接断开，请重新连接。"))
+                if (CheckItem(SelectedCamera!.Device, "相机连接断开，请重新连接。"))
                 {
-                    if (selectedCamera!.Device!.TriggerSet.Open(TriggerSourceEnum.Software))
+                    if (SelectedCamera!.Device!.TriggerSet.Open(TriggerSourceEnum.Software))
                     {
                         ShowMessage("打开软触发。");
                     }
@@ -297,17 +298,17 @@ namespace CompreDemo.Forms
 
         private void TSM关闭触发_Click(object sender, EventArgs e)
         {
-            if (selectedCamera == null)
+            if (SelectedCamera == null)
             {
                 ShowMessage("没有选定相机。");
                 return;
             }
-            if (selectedCamera.Device == null)
+            if (SelectedCamera.Device == null)
             {
                 ShowMessage("相机连接断开，请重新连接。");
                 return;
             }
-            if (selectedCamera.Device.TriggerSet.Close())
+            if (SelectedCamera.Device.TriggerSet.Close())
             {
                 ShowMessage("关闭软触发。");
             }
@@ -315,14 +316,14 @@ namespace CompreDemo.Forms
 
         private void TSM连接_Click(object sender, EventArgs e)
         {
-            if (CheckItem(selectedCamera, "没有选定相机。"))
+            if (CheckItem(SelectedCamera, "没有选定相机。"))
             {
-                if (selectedCamera!.OpenCamera())
+                if (SelectedCamera!.OpenCamera())
                 {
                     ShowMessage($"{LB相机列表.SelectedItem}连接成功。");
-                    selectedCamera.Device!.CameraOpened += OnCameraOpen;
-                    selectedCamera.Device!.ConnectionLost += OnConnectLoss;
-                    selectedCamera.Device!.CameraClosed += OnCameraClose;
+                    SelectedCamera.Device!.CameraOpened += OnCameraOpen;
+                    SelectedCamera.Device!.ConnectionLost += OnConnectLoss;
+                    SelectedCamera.Device!.CameraClosed += OnCameraClose;
                 }
                 else
                 {
@@ -333,9 +334,9 @@ namespace CompreDemo.Forms
 
         private void TSM断开_Click(object sender, EventArgs e)
         {
-            if (CheckItem(selectedCamera, "没有选定相机。"))
+            if (CheckItem(SelectedCamera, "没有选定相机。"))
             {
-                if (selectedCamera!.CloseCamera())
+                if (SelectedCamera!.CloseCamera())
                 {
                     ShowMessage($"{LB相机列表.SelectedItem}断开成功。");
                 }
@@ -348,14 +349,14 @@ namespace CompreDemo.Forms
 
         private void TSM开始采集_Click(object sender, EventArgs e)
         {
-            if (CheckItem(selectedCamera, "没有选定相机。"))
+            if (CheckItem(SelectedCamera, "没有选定相机。"))
             {
-                if (selectedCamera!.Device == null)
+                if (SelectedCamera!.Device == null)
                 {
                     ShowMessage("相机连接断开，请重新连接。");
                     return;
                 }
-                if (selectedCamera.StartGrab())
+                if (SelectedCamera.StartGrab())
                 {
                     ShowMessage($"{LB相机列表.SelectedItem}开始采集。");
                     //Task.Run(() => device.WaitImage(selectedCamera.Device));
@@ -369,14 +370,14 @@ namespace CompreDemo.Forms
 
         private void TSM停止采集_Click(object sender, EventArgs e)
         {
-            if (CheckItem(selectedCamera, "没有选定相机。"))
+            if (CheckItem(SelectedCamera, "没有选定相机。"))
             {
-                if (selectedCamera!.Device == null)
+                if (SelectedCamera!.Device == null)
                 {
                     ShowMessage("相机连接断开，请重新连接。");
                     return;
                 }
-                if (selectedCamera.StopGrab())
+                if (SelectedCamera.StopGrab())
                 {
                     ShowMessage($"{LB相机列表.SelectedItem}停止采集。");
                 }
@@ -389,8 +390,8 @@ namespace CompreDemo.Forms
 
         private void TSM参数设置_Click(object sender, EventArgs e)
         {
-            if (selectedCamera == null) return;
-            Setting cameraSetting = new(selectedCamera);
+            if (SelectedCamera == null) return;
+            Setting cameraSetting = new(SelectedCamera);
             cameraSetting.Show();
         }
 
@@ -413,8 +414,10 @@ namespace CompreDemo.Forms
 
         private void CameraSetting_FormClosing(object sender, FormClosingEventArgs e)
         {
-            selectedCamera?.StopGrab();
+            e.Cancel = true;
+            Hide();
         }
 
+        
     }
 }

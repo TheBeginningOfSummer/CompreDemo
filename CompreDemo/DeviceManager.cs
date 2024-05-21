@@ -1,6 +1,11 @@
 ﻿using CSharpKit.FileManagement;
+using Microsoft.VisualBasic;
+using OpenCvSharp;
 using PaddleOCRSharp;
 using Services;
+using System.Collections;
+using System.Diagnostics;
+using System.IO;
 using ThridLibray;
 
 namespace CompreDemo
@@ -26,16 +31,15 @@ namespace CompreDemo
 
         #region 设备
         //运动控制卡列表
-        public Dictionary<string, MotionControl>? Controllers = [];
+        public Dictionary<string, MotionControl> Controllers = [];
         //相机列表
-        public Dictionary<string, HuarayCamera>? CameraList = [];
-        //自动使用的设备
-        MotionControl? controller1;
-        HuarayCamera? camera1;
+        public Dictionary<string, HuarayCamera> CameraList = [];
+        //字符识别引擎
+        readonly PaddleOCREngine engine;
         #endregion
 
-        readonly PaddleOCREngine engine;
-        
+        public Dictionary<string, int[]> ROIList = [];
+
         public DeviceManager()
         {
             try
@@ -50,13 +54,17 @@ namespace CompreDemo
             engine = new PaddleOCREngine(null, oCRParameter);
         }
 
-        //加载设备
+        //设备加载
         public void InitializeDevices()
         {
             Enumerator.EnumerateDevices();
-            LoadControllerConfig();
-            LoadCameraConfig();
-            if (Controllers!.TryGetValue("Zmotion1", out controller1))
+            Controllers = LoadConfig<MotionControl>(BaseAxis.RootPath, "Motion.json");
+            foreach (var controller in Controllers.Values)
+                controller.ReinitializeAxes();
+            CameraList = LoadConfig<HuarayCamera>("Cameras", "HuarayCameraList.json");
+            ROIList = LoadConfig<int[]>("Cameras", "ROIList.json");
+
+            if (Controllers!.TryGetValue("Zmotion1", out var controller1))
             {
                 if (controller1.Connect())
                 {
@@ -77,12 +85,12 @@ namespace CompreDemo
             {
                 //得到控制器失败
             }
-            if (CameraList!.TryGetValue("cam1", out camera1))
+            if (CameraList!.TryGetValue("cam1", out var camera1))
             {
                 camera1.OpenCamera();
                 camera1.Device?.TriggerSet.Open(TriggerSourceEnum.Software);
                 //Task.Run(camera1.WaitImage);//连续向队列中取图，用于非触发模式
-                
+
             }
             else
             {
@@ -109,21 +117,26 @@ namespace CompreDemo
                 return "default";
             }
         }
+
+        public static Dictionary<string, T> LoadConfig<T>(string path, string fileName)
+        {
+            var dic = JsonManager.ReadJsonString<Dictionary<string, T>>(path, fileName);
+            if (dic == null)
+            {
+                dic = [];
+                JsonManager.SaveJsonString(path, fileName, dic);
+            }
+            return dic;
+        }
+
+        public static void SaveConfig<T>(string path, string fileName, Dictionary<string, T> data)
+        {
+            data ??= [];
+            JsonManager.SaveJsonString(path, fileName, data);
+        }
         #endregion
 
         #region 相机
-        /// <summary>
-        /// 加载相机列表
-        /// </summary>
-        public void LoadCameraConfig(string path = "Cameras")
-        {
-            CameraList = JsonManager.ReadJsonString<Dictionary<string, HuarayCamera>>(path, "HuarayCameraList.json");
-            if (CameraList == null)
-            {
-                CameraList = [];
-                JsonManager.SaveJsonString(path, "HuarayCameraList.json", CameraList);
-            }
-        }
         /// <summary>
         /// 保存相机列表
         /// </summary>
@@ -142,7 +155,8 @@ namespace CompreDemo
         {
             HuarayCamera huarayCamera = new(name, key);
             huarayCamera.GetDevice();
-            CameraList?.Add(name, huarayCamera);
+            if (!CameraList.TryAdd(name, huarayCamera))
+                CameraList[name] = huarayCamera;
             SaveCameraConfig();
         }
 
@@ -160,19 +174,6 @@ namespace CompreDemo
         #endregion
 
         #region 控制器
-        public void LoadControllerConfig()
-        {
-            string path = BaseAxis.RootPath;
-            Controllers = JsonManager.ReadJsonString<Dictionary<string, MotionControl>>(path, "Motion.json");
-            if (Controllers == null)
-            {
-                Controllers = [];
-                JsonManager.SaveJsonString(path, "Motion.json", Controllers);
-            }
-            foreach (var controller in Controllers.Values)
-                controller.ReinitializeAxes();
-        }
-
         public void SaveControllerConfig()
         {
             string path = BaseAxis.RootPath;
@@ -335,7 +336,7 @@ namespace CompreDemo
         #endregion
 
         #region 自动轨迹
-        ManualResetEvent autoRun = new(false);
+        public static readonly ManualResetEvent autoRun = new(false);
         public static void Track1(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
         {
             BaseAxis axis1 = motion.Axes["Axis1"];
@@ -405,7 +406,7 @@ namespace CompreDemo
             }
         }
 
-        public void Track3(MotionControl motion, double startX, double startY, double intervalX, double intervalY)
+        public static void Track3(MotionControl motion, HuarayCamera? camera, double startX, double startY, double intervalX, double intervalY)
         {
             BaseAxis axis1 = motion.Axes["Axis1"];
             BaseAxis axis2 = motion.Axes["Axis2"];
@@ -414,25 +415,39 @@ namespace CompreDemo
             axis2.SingleAbsoluteMove(startY);
             axis1.Wait();
             axis2.Wait();
-
-            if(camera1 == null)
+            
+            if (camera == null)
             {
                 FileManager.AppendLog("Log", "错误记录", "没有相机，自动运行停止。");
                 return;
             }
-            if(camera1.Device == null)
+            if (camera.Device == null)
             {
                 FileManager.AppendLog("Log", "错误记录", "没有相机，自动运行停止。");
                 return;
             }
-            camera1.Device.ExecuteSoftwareTrigger();
-
-            autoRun.WaitOne(1000);
-            //if (true) return;
-
-            for (int i = 0; i < 12; i++)
+            
+            for (int i = 1; i <= 12; i++)
             {
+                //var image = camera.CatchImage();
+                
+                Debug.WriteLine($"[{DateTime.Now:G}]{i}");
+                Thread.Sleep(2000);
+                autoRun.WaitOne();
 
+                if (i == 12) continue;
+                if (i % 3 == 0)
+                {
+                    axis1.SingleAbsoluteMove(startX);
+                    axis2.SingleRelativeMove(intervalY);
+                    axis1.Wait();
+                    axis2.Wait();
+                }
+                else
+                {
+                    axis1.SingleRelativeMove(intervalX);
+                    axis1.Wait();
+                }
             }
         }
         #endregion

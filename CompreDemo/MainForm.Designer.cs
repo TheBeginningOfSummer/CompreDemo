@@ -28,12 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             MS菜单 = new MenuStrip();
             TSM设置 = new ToolStripMenuItem();
             TSM相机配置 = new ToolStripMenuItem();
             TSM控制卡配置 = new ToolStripMenuItem();
-            label1 = new Label();
-            LB相机状态 = new Label();
             MS菜单.SuspendLayout();
             SuspendLayout();
             // 
@@ -69,35 +68,18 @@
             TSM控制卡配置.Text = "控制卡配置";
             TSM控制卡配置.Click += TSM控制卡配置_Click;
             // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(93, 237);
-            label1.Name = "label1";
-            label1.Size = new Size(68, 17);
-            label1.TabIndex = 1;
-            label1.Text = "相机状态：";
-            // 
-            // LB相机状态
-            // 
-            LB相机状态.BackColor = Color.Red;
-            LB相机状态.Location = new Point(156, 238);
-            LB相机状态.Name = "LB相机状态";
-            LB相机状态.Size = new Size(24, 16);
-            LB相机状态.TabIndex = 2;
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(984, 561);
-            Controls.Add(LB相机状态);
-            Controls.Add(label1);
             Controls.Add(MS菜单);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = MS菜单;
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "测试";
+            FormClosing += MainForm_FormClosing;
             MS菜单.ResumeLayout(false);
             MS菜单.PerformLayout();
             ResumeLayout(false);
@@ -110,7 +92,5 @@
         private ToolStripMenuItem TSM设置;
         private ToolStripMenuItem TSM相机配置;
         private ToolStripMenuItem TSM控制卡配置;
-        private Label label1;
-        private Label LB相机状态;
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Services
+﻿using OpenCvSharp;
+
+namespace Services
 {
     public class FormMethod
     {
@@ -16,5 +18,27 @@
         {
             return MessageBox.Show(message, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
         }
+    }
+
+    public class DisplayMat
+    {
+        private Mat? image;
+        public Mat? Image
+        {
+            get { return image; }
+            set
+            {
+                image?.Dispose();
+                if (value != null)
+                    image = new Mat(value, new Rect(0, 0, value.Width, value.Height));
+                
+            }
+        }
+
+    }
+
+    public class Display : PictureBox
+    {
+        //protected displayMat dMat;
     }
 }

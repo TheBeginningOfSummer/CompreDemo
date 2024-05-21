@@ -131,14 +131,14 @@
             // TSM连接当前卡
             // 
             TSM连接当前卡.Name = "TSM连接当前卡";
-            TSM连接当前卡.Size = new Size(180, 22);
+            TSM连接当前卡.Size = new Size(136, 22);
             TSM连接当前卡.Text = "连接当前卡";
             TSM连接当前卡.Click += TSM连接当前卡_Click;
             // 
             // TSM断开当前卡
             // 
             TSM断开当前卡.Name = "TSM断开当前卡";
-            TSM断开当前卡.Size = new Size(180, 22);
+            TSM断开当前卡.Size = new Size(136, 22);
             TSM断开当前卡.Text = "断开当前卡";
             TSM断开当前卡.Click += TSM断开当前卡_Click;
             // 
@@ -183,7 +183,7 @@
             // 
             TST轨迹.Name = "TST轨迹";
             TST轨迹.Size = new Size(100, 23);
-            TST轨迹.Text = "0";
+            TST轨迹.Text = "2";
             TST轨迹.ToolTipText = "轨迹";
             // 
             // LBIP地址
@@ -300,6 +300,7 @@
             Name = "MotionSetting";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "MotionSetting";
+            FormClosing += MotionSetting_FormClosing;
             MS菜单.ResumeLayout(false);
             MS菜单.PerformLayout();
             ResumeLayout(false);

@@ -7,7 +7,7 @@ namespace CompreDemo.Forms
     {
         readonly DeviceManager device = DeviceManager.Instance;
         Task? testMotion;
-        CancellationTokenSource cancellation = new CancellationTokenSource();
+        CancellationTokenSource cancellation = new();
 
         public MotionSetting()
         {
@@ -16,7 +16,7 @@ namespace CompreDemo.Forms
             CB轴卡.Items.Clear();
             foreach (var controller in device.Controllers!.Values)
                 CB轴卡.Items.Add(controller.Name);
-            
+
         }
 
         public static void StartTask(ref Task? task, Action action)
@@ -152,6 +152,9 @@ namespace CompreDemo.Forms
                 case "1":
                     Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track2(motion, 300, 5, 300, 50)));
                     break;
+                case "2":
+                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track3(motion, device.CameraList["cam1"], 0, 0, 50, 100)));
+                    break;
             }
         }
 
@@ -168,5 +171,10 @@ namespace CompreDemo.Forms
             MessageBox.Show("断开连接", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        private void MotionSetting_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            Hide();
+        }
     }
 }
