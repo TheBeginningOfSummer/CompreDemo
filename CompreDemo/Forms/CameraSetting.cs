@@ -2,7 +2,6 @@
 using OpenCvSharp;
 using Services;
 using ThridLibray;
-using CSharpKit.FileManagement;
 using Microsoft.VisualBasic;
 
 namespace CompreDemo.Forms
@@ -51,6 +50,7 @@ namespace CompreDemo.Forms
             UpdateCameraLB();
             MouseCallbackEvent = new MouseCallback(MouseDraw);
             //Task.Run(UpdateImage);
+            UpdateROICB();
         }
 
         public void MouseDraw(MouseEventTypes mouseEvent, int x, int y, MouseEventFlags flags, IntPtr userData)
@@ -94,10 +94,17 @@ namespace CompreDemo.Forms
                         if (!device.ROIList.TryAdd(input, roi))
                             device.ROIList[input] = roi;
                         DeviceManager.SaveConfig("Cameras", "ROIList.json", device.ROIList);
+                        UpdateROICB();
                     }
                     window?.Dispose();
                 }
             }
+        }
+
+        private void CameraSetting_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            Hide();
         }
 
         #region 方法
@@ -137,6 +144,13 @@ namespace CompreDemo.Forms
             }
             CB相机列表.Text = CB相机列表.Items[0]?.ToString();
         }
+
+        private void UpdateROICB()
+        {
+            CB目标区域.Items.Clear();
+            foreach (var item in device.ROIList)
+                CB目标区域.Items.Add(item.Key);
+        }
         /// <summary>
         /// 检查当前项是否为空
         /// </summary>
@@ -167,6 +181,7 @@ namespace CompreDemo.Forms
             }
             return default;
         }
+
         #endregion
 
         #region 链接事件
@@ -412,12 +427,125 @@ namespace CompreDemo.Forms
 
         #endregion
 
-        private void CameraSetting_FormClosing(object sender, FormClosingEventArgs e)
+        private void BTN目标区域_Click(object sender, EventArgs e)
         {
-            e.Cancel = true;
-            Hide();
+            if (CurrentImage == null) return;
+            if (device.ROIList.TryGetValue(CB目标区域.Text, out var roi))
+            {
+                OpenCvSharp.Point point1 = new(roi[0], roi[1]);
+                OpenCvSharp.Point point2 = new(roi[0] + roi[2], roi[1] + roi[3]);
+                Mat image = CurrentImage.ToMat();
+                Cv2.Rectangle(image, point1, point2, Scalar.Red, 2);
+                PB图片.Image = image.ToBitmap();
+            }
         }
 
-        
+        #region 图片事件
+        bool isMove;
+        int pictureX, pictureY = 0; 
+        int mouseX, mouseY = 0;
+        private void PB图片_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (CurrentImage == null) return;
+            isMove = true;
+            mouseX = e.X;
+            mouseY = e.Y;
+        }
+
+        private void PB图片_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (CurrentImage == null) return;
+            isMove = false;
+        }
+
+        private void PB图片_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (CurrentImage == null) return;
+            if (isMove)
+            {
+                pictureX += e.X - mouseX;
+                pictureY += e.Y - mouseY;
+
+                //PictureMove(PB图片.Height, PB图片.Width, CurrentImage.ToMat(), pictureX, pictureY);
+            }
+        }
+
+        private void PB图片_Resize(object sender, EventArgs e)
+        {
+            TB信息.Text = $"{PB图片.Width}:{PB图片.Height}";
+        }
+        #endregion
+
+        public static Mat GetDisplayPicture(Mat background, int height, int width, Mat sourcePicture, int xOffset, int yOffset)
+        {
+            Mat display = new(sourcePicture, new Rect(0, 0, width - xOffset, height - yOffset));
+            Rect rect = new(xOffset, yOffset, display.Width, display.Height);
+            Mat roi = new(background, rect);
+            display.CopyTo(roi);
+            return background;
+        }
+
+        public void PictureMove(int height, int width, Mat sourcePicture, int pictureX, int pictureY)
+        {
+            Mat background = new(height, width, MatType.CV_8UC3);
+            background.SetTo(new Scalar(0, 0, 0));
+
+            if (sourcePicture.Width > width || sourcePicture.Height > height)
+            {
+                if (pictureX >= 0 && pictureY >= 0)
+                {
+                    //截取显示图片
+                    Mat display = new(sourcePicture, new Rect(0, 0, Math.Min(width, sourcePicture.Width), Math.Min(height, sourcePicture.Height)));
+                    //显示区域
+                    Mat roi = new(background, new Rect(0, 0, display.Width, display.Height));
+                    //覆盖
+                    display.CopyTo(roi);
+                }
+                else if (pictureX < 0 && pictureY < 0)
+                {
+                    Mat display = new(sourcePicture, new Rect(0 - pictureX, 0 - pictureY, Math.Min(width, sourcePicture.Width), Math.Min(height, sourcePicture.Height)));
+                    Mat roi = new(background, new Rect(0, 0, display.Width, display.Height));
+                    display.CopyTo(roi);
+                }
+                else if (pictureX < 0 && pictureY > 0)
+                {
+
+                }
+                else if (pictureX > 0 && pictureY < 0)
+                {
+
+                }
+            }
+        }
+
+        private void BTN测试_Click(object sender, EventArgs e)
+        {
+            //Mat background = new(PB图片.Height, PB图片.Width, MatType.CV_8UC3);
+            //background.SetTo(new Scalar(0, 0, 0));
+
+            //Mat source1 = new Mat("C:\\Users\\1\\Desktop\\新建文件夹\\无标题22.png");
+            //Mat source = new Mat(source1, new Rect(0, 0, PB图片.Width - 100, PB图片.Height - 50));
+
+            //Rect rect = new Rect(100, 50, source.Width, source.Height);
+            //Mat roi = new Mat(background, rect);
+
+            //source.CopyTo(roi);
+            //Rect roi = new Rect(10, 10, 200, 200);
+            //Mat source = Cv2.ImRead("C:\\Users\\1\\Desktop\\新建文件夹\\无标题22.png");
+            //Mat source1 = new Mat(source, roi);
+
+            //Mat back =  new Mat(image, roi);
+
+            //source1.CopyTo(back);
+
+            //Mat matBack = new Mat("C:\\Users\\1\\Desktop\\新建文件夹\\无标题22.png");
+            //Mat matBoy = new Mat("C:\\Users\\1\\Desktop\\新建文件夹\\表值0.bmp");
+            //Rect rect = new Rect(100, 50, matBoy.Width, matBoy.Height);
+            //Mat matRect = new Mat(matBack, rect);
+            //matBoy.CopyTo(matRect);//用matboy替换roi的区域
+            //Cv2.ImShow(" ", matBack);
+            DeviceManager.AutoRun.Set();
+        }
+
     }
 }

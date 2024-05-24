@@ -12,11 +12,7 @@ namespace CompreDemo.Forms
         public MotionSetting()
         {
             InitializeComponent();
-
-            CB轴卡.Items.Clear();
-            foreach (var controller in device.Controllers!.Values)
-                CB轴卡.Items.Add(controller.Name);
-
+            UpdateCB();
         }
 
         public static void StartTask(ref Task? task, Action action)
@@ -31,6 +27,13 @@ namespace CompreDemo.Forms
                 task = new Task(action);
             }
             task.Start();
+        }
+
+        public void UpdateCB()
+        {
+            CB轴卡.Items.Clear();
+            foreach (var controller in device.Controllers.Values)
+                CB轴卡.Items.Add(controller.Name);
         }
 
         private void UpdateInfo(string controllerName, Label label)
@@ -137,13 +140,7 @@ namespace CompreDemo.Forms
         {
             var motion = device.GetController(CB轴卡.Text);
             if (motion == null) return;
-            if (testMotion != null)
-                if (!testMotion.IsCompleted)
-                {
-                    MessageBox.Show("运行中", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
+            
             switch (TST轨迹.Text)
             {
                 case "0":
@@ -153,6 +150,8 @@ namespace CompreDemo.Forms
                     Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track2(motion, 300, 5, 300, 50)));
                     break;
                 case "2":
+                    if (testMotion != null)
+                        if (!testMotion.IsCompleted) break;
                     Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track3(motion, device.CameraList["cam1"], 0, 0, 50, 100)));
                     break;
             }

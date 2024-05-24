@@ -1,11 +1,9 @@
 ﻿using CSharpKit.FileManagement;
-using Microsoft.VisualBasic;
 using OpenCvSharp;
+using OpenCvSharp.Extensions;
 using PaddleOCRSharp;
 using Services;
-using System.Collections;
 using System.Diagnostics;
-using System.IO;
 using ThridLibray;
 
 namespace CompreDemo
@@ -39,6 +37,8 @@ namespace CompreDemo
         #endregion
 
         public Dictionary<string, int[]> ROIList = [];
+
+        public Action? CameraAction;
 
         public DeviceManager()
         {
@@ -89,6 +89,7 @@ namespace CompreDemo
             {
                 camera1.OpenCamera();
                 camera1.Device?.TriggerSet.Open(TriggerSourceEnum.Software);
+                camera1.StartGrab();
                 //Task.Run(camera1.WaitImage);//连续向队列中取图，用于非触发模式
 
             }
@@ -336,7 +337,7 @@ namespace CompreDemo
         #endregion
 
         #region 自动轨迹
-        public static readonly ManualResetEvent autoRun = new(false);
+        public static readonly ManualResetEvent AutoRun = new(false);
         public static void Track1(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
         {
             BaseAxis axis1 = motion.Axes["Axis1"];
@@ -406,7 +407,7 @@ namespace CompreDemo
             }
         }
 
-        public static void Track3(MotionControl motion, HuarayCamera? camera, double startX, double startY, double intervalX, double intervalY)
+        public void Track3(MotionControl motion, HuarayCamera? camera, double startX, double startY, double intervalX, double intervalY)
         {
             BaseAxis axis1 = motion.Axes["Axis1"];
             BaseAxis axis2 = motion.Axes["Axis2"];
@@ -426,14 +427,14 @@ namespace CompreDemo
                 FileManager.AppendLog("Log", "错误记录", "没有相机，自动运行停止。");
                 return;
             }
-            
+
             for (int i = 1; i <= 12; i++)
             {
-                //var image = camera.CatchImage();
                 
-                Debug.WriteLine($"[{DateTime.Now:G}]{i}");
-                Thread.Sleep(2000);
-                autoRun.WaitOne();
+
+                CameraAction?.Invoke();
+
+                AutoRun.WaitOne();
 
                 if (i == 12) continue;
                 if (i % 3 == 0)

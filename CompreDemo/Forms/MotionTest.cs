@@ -7,8 +7,8 @@ namespace CompreDemo.Forms
     {
         #region 笔刷
         readonly Graphics graphics;
-        Pen pen = new Pen(Color.LightBlue, 2);
-        SolidBrush brush1 = new SolidBrush(Color.Red);
+        Pen pen = new(Color.LightBlue, 2);
+        SolidBrush brush1 = new(Color.Red);
         SolidBrush brush2;
         #endregion
 

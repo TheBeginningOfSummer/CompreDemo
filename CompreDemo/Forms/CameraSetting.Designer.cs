@@ -52,6 +52,9 @@
             TSM关闭触发 = new ToolStripMenuItem();
             TSM删除 = new ToolStripMenuItem();
             BTN捕获图片 = new Button();
+            BTN目标区域 = new Button();
+            CB目标区域 = new ComboBox();
+            BTN测试 = new Button();
             MS相机.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PB图片).BeginInit();
             CMS相机列表.SuspendLayout();
@@ -151,8 +154,13 @@
             PB图片.Location = new Point(182, 58);
             PB图片.Name = "PB图片";
             PB图片.Size = new Size(500, 280);
+            PB图片.SizeMode = PictureBoxSizeMode.Zoom;
             PB图片.TabIndex = 4;
             PB图片.TabStop = false;
+            PB图片.MouseDown += PB图片_MouseDown;
+            PB图片.MouseMove += PB图片_MouseMove;
+            PB图片.MouseUp += PB图片_MouseUp;
+            PB图片.Resize += PB图片_Resize;
             // 
             // LB相机列表
             // 
@@ -241,11 +249,45 @@
             BTN捕获图片.UseVisualStyleBackColor = true;
             BTN捕获图片.Click += BTN捕获图片_Click;
             // 
+            // BTN目标区域
+            // 
+            BTN目标区域.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            BTN目标区域.Location = new Point(688, 120);
+            BTN目标区域.Name = "BTN目标区域";
+            BTN目标区域.Size = new Size(100, 25);
+            BTN目标区域.TabIndex = 10;
+            BTN目标区域.Text = "目标区域";
+            BTN目标区域.UseVisualStyleBackColor = true;
+            BTN目标区域.Click += BTN目标区域_Click;
+            // 
+            // CB目标区域
+            // 
+            CB目标区域.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            CB目标区域.FormattingEnabled = true;
+            CB目标区域.Location = new Point(688, 89);
+            CB目标区域.Name = "CB目标区域";
+            CB目标区域.Size = new Size(100, 25);
+            CB目标区域.TabIndex = 11;
+            // 
+            // BTN测试
+            // 
+            BTN测试.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            BTN测试.Location = new Point(688, 151);
+            BTN测试.Name = "BTN测试";
+            BTN测试.Size = new Size(100, 25);
+            BTN测试.TabIndex = 12;
+            BTN测试.Text = "测试";
+            BTN测试.UseVisualStyleBackColor = true;
+            BTN测试.Click += BTN测试_Click;
+            // 
             // CameraSetting
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(BTN测试);
+            Controls.Add(CB目标区域);
+            Controls.Add(BTN目标区域);
             Controls.Add(BTN捕获图片);
             Controls.Add(LB相机列表);
             Controls.Add(PB图片);
@@ -291,5 +333,8 @@
         private ToolStripMenuItem TSM打开软触发;
         private ToolStripMenuItem TSM关闭触发;
         private ToolStripMenuItem TSM添加相机;
+        private Button BTN目标区域;
+        private ComboBox CB目标区域;
+        private Button BTN测试;
     }
 }
