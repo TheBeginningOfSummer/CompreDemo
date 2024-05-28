@@ -12,21 +12,18 @@ namespace CompreDemo
         public MainForm()
         {
             InitializeComponent();
+            device.ErrorAction += ShowError;
             autoRun.DoWork += AutoRun_DoWork;
+        }
+
+        private void ShowError(string message)
+        {
+            TB信息.Invoke(() => { TB信息.Text += message + Environment.NewLine; });
         }
 
         private void AutoRun_DoWork(object? sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            device.Track3(device.Controllers["Zmotion1"], device.CameraList["cam1"], 0, 0, 50, 100);
-        }
-
-        private void CameraEvent()
-        {
-            Task.Run(() => { });
-            //camera.Device.ExecuteSoftwareTrigger();
-            //var image = camera.CatchImage();
-            //if (image == null) { FormMethod.ShowInfoBox("捕获图像失败。"); return; }
-            //Cv2.ImShow("测试", BitmapConverter.ToMat(image));
+            device.AutoRun3("Device1", 0, 0, 50, 100);
         }
 
         private void TSM控制卡配置_Click(object sender, EventArgs e)
@@ -39,11 +36,17 @@ namespace CompreDemo
             cameraSetting.ShowDialog();
         }
 
+        private void TSM列表设置_Click(object sender, EventArgs e)
+        {
+            UsingListSetting listSetting = new();
+            listSetting.Show();
+        }
+
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
 
         }
-        
+
         private void BTN自动运行_Click(object sender, EventArgs e)
         {
             if (autoRun.IsBusy)
@@ -54,5 +57,6 @@ namespace CompreDemo
             autoRun.RunWorkerAsync();
         }
 
+        
     }
 }

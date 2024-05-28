@@ -1,9 +1,18 @@
 ﻿using OpenCvSharp;
+using ThridLibray;
 
 namespace Services
 {
     public class FormMethod
     {
+        public static void OnThread(Control control, Action method)
+        {
+            if (control.IsHandleCreated)
+                control.Invoke(method);
+            else
+                method();
+        }
+
         public static void ShowInfoBox(string message, string caption = "提示")
         {
             MessageBox.Show(message, caption, MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -17,6 +26,13 @@ namespace Services
         public static DialogResult ShowQuestionBox(string message, string caption = "提示")
         {
             return MessageBox.Show(message, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        }
+
+        public static void UpdateListBox(ListBox list, List<string> data)
+        {
+            list.Items.Clear();
+            foreach (var item in data)
+                list.Items.Add(item);
         }
     }
 

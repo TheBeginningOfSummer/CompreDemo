@@ -3,7 +3,6 @@ using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using PaddleOCRSharp;
 using Services;
-using System.Diagnostics;
 using ThridLibray;
 
 namespace CompreDemo
@@ -31,20 +30,22 @@ namespace CompreDemo
         //运动控制卡列表
         public Dictionary<string, MotionControl> Controllers = [];
         //相机列表
-        public Dictionary<string, HuarayCamera> CameraList = [];
+        public Dictionary<string, HuarayCamera> Cameras = [];
+        //使用的设备
+        public Dictionary<string, string[]> UsingDevices = [];
         //字符识别引擎
         readonly PaddleOCREngine engine;
         #endregion
 
-        public Dictionary<string, int[]> ROIList = [];
+        public Dictionary<string, int[]> ROIDic = [];
 
-        public Action? CameraAction;
+        public Action<string>? ErrorAction;
 
         public DeviceManager()
         {
             try
             {
-                InitializeDevices();
+                InitializeDevices("Device1");
             }
             catch (Exception e)
             {
@@ -55,16 +56,20 @@ namespace CompreDemo
         }
 
         //设备加载
-        public void InitializeDevices()
+        public void InitializeDevices(string usingDevice)
         {
+            #region 设备配置加载
             Enumerator.EnumerateDevices();
             Controllers = LoadConfig<MotionControl>(BaseAxis.RootPath, "Motion.json");
             foreach (var controller in Controllers.Values)
                 controller.ReinitializeAxes();
-            CameraList = LoadConfig<HuarayCamera>("Cameras", "HuarayCameraList.json");
-            ROIList = LoadConfig<int[]>("Cameras", "ROIList.json");
-
-            if (Controllers!.TryGetValue("Zmotion1", out var controller1))
+            Cameras = LoadConfig<HuarayCamera>("Cameras", "HuarayCameraList.json");
+            ROIDic = LoadConfig<int[]>("Cameras", "ROIList.json");
+            UsingDevices = LoadConfig<string[]>("Config", "UsingDevices.json");
+            #endregion
+            
+            #region 设备初始化
+            if (Controllers!.TryGetValue(UsingDevices[usingDevice][0], out var controller1))
             {
                 if (controller1.Connect())
                 {
@@ -85,24 +90,24 @@ namespace CompreDemo
             {
                 //得到控制器失败
             }
-            if (CameraList!.TryGetValue("cam1", out var camera1))
+            if (Cameras!.TryGetValue(UsingDevices[usingDevice][3], out var camera1))
             {
                 camera1.OpenCamera();
                 camera1.Device?.TriggerSet.Open(TriggerSourceEnum.Software);
                 camera1.StartGrab();
-                //Task.Run(camera1.WaitImage);//连续向队列中取图，用于非触发模式
-
             }
             else
             {
                 FileManager.AppendLog("Log", "错误记录", "相机加载失败。");
             }
+            #endregion
         }
 
         #region 方法
         public void RecordAndShow(string message)
         {
             FileManager.AppendLog("Log", "错误记录", message);
+            ErrorAction?.Invoke(message);
         }
 
         public string OCR(Bitmap bitmap)
@@ -119,12 +124,15 @@ namespace CompreDemo
             }
         }
 
-        public static Dictionary<string, T> LoadConfig<T>(string path, string fileName)
+        public static Dictionary<string, T> LoadConfig<T>(string path, string fileName, Dictionary<string, T>? defaultData = null)
         {
             var dic = JsonManager.ReadJsonString<Dictionary<string, T>>(path, fileName);
             if (dic == null)
             {
-                dic = [];
+                if (defaultData != null)
+                    dic = defaultData;
+                else
+                    dic = [];
                 JsonManager.SaveJsonString(path, fileName, dic);
             }
             return dic;
@@ -143,8 +151,8 @@ namespace CompreDemo
         /// </summary>
         public void SaveCameraConfig(string path = "Cameras")
         {
-            CameraList ??= [];
-            JsonManager.SaveJsonString(path, "HuarayCameraList.json", CameraList);
+            Cameras ??= [];
+            JsonManager.SaveJsonString(path, "HuarayCameraList.json", Cameras);
         }
 
         public static List<IDeviceInfo> GetCameraList()
@@ -156,18 +164,18 @@ namespace CompreDemo
         {
             HuarayCamera huarayCamera = new(name, key);
             huarayCamera.GetDevice();
-            if (!CameraList.TryAdd(name, huarayCamera))
-                CameraList[name] = huarayCamera;
+            if (!Cameras.TryAdd(name, huarayCamera))
+                Cameras[name] = huarayCamera;
             SaveCameraConfig();
         }
 
         public void DeleteCamera(string? name)
         {
             if (name == null) return;
-            if (CameraList!.TryGetValue(name, out var huarayCamera))
+            if (Cameras!.TryGetValue(name, out var huarayCamera))
             {
                 huarayCamera.CloseCamera();
-                CameraList.Remove(name);
+                Cameras.Remove(name);
                 SaveCameraConfig();
             }
         }
@@ -336,9 +344,57 @@ namespace CompreDemo
 
         #endregion
 
-        #region 自动轨迹
-        public static readonly ManualResetEvent AutoRun = new(false);
-        public static void Track1(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
+        #region 设备动作
+        public static readonly ManualResetEvent ProcessControl = new(false);
+
+        public void DoWork(string usingDevice, params string[] targetCode)
+        {
+            if (!Controllers.TryGetValue(UsingDevices[usingDevice][0], out var motion)) return;
+            if (!Cameras.TryGetValue(UsingDevices[usingDevice][3], out var camera)) return;
+            for (int i = 0; i < 3; i++)
+            {
+                //切换表值
+                motion.SetOutput(0, 1);
+                Thread.Sleep(1000);
+                motion.SetOutput(0, 0);
+                //相机图像捕获
+                camera.Device!.ExecuteSoftwareTrigger();
+                var image = camera.CatchImage();
+                if (image != null)
+                {
+                    //图像处理
+                    Mat imageMat = BitmapConverter.ToMat(image);
+                    if (ROIDic.TryGetValue(UsingDevices[usingDevice][4], out var roi))
+                        imageMat = new(imageMat, new Rect(roi[0], roi[1], roi[2], roi[3]));
+                    string code = OCR(imageMat.ToBitmap());
+
+                    MessageBox.Show(code);
+                    //if (code != "default")
+                    //{
+                    //    if (code == targetCode[i])
+                    //    {
+                    //        //成功
+                    //    }
+                    //    else
+                    //    {
+                    //        RecordAndShow("识别字符不匹配。");
+                    //        //第i次识别失败
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    RecordAndShow("图像识别失败。");
+                    //    //图像识别不成功
+                    //}
+                }
+                else
+                {
+                    RecordAndShow("捕获图像失败。请检查相机。");
+                }
+            }
+        }
+
+        public static void AutoRun1(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
         {
             BaseAxis axis1 = motion.Axes["Axis1"];
             BaseAxis axis2 = motion.Axes["Axis2"];
@@ -385,7 +441,7 @@ namespace CompreDemo
             }
         }
 
-        public static void Track2(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
+        public static void AutoRun2(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
         {
             BaseAxis axis1 = motion.Axes["Axis1"];
             BaseAxis axis2 = motion.Axes["Axis2"];
@@ -407,16 +463,20 @@ namespace CompreDemo
             }
         }
 
-        public void Track3(MotionControl motion, HuarayCamera? camera, double startX, double startY, double intervalX, double intervalY)
+        public void AutoRun3(string usingDevice, double startX, double startY, double intervalX, double intervalY)
         {
-            BaseAxis axis1 = motion.Axes["Axis1"];
-            BaseAxis axis2 = motion.Axes["Axis2"];
+            string[] deviceList = UsingDevices[usingDevice];
+            if (deviceList.Length < 4) return;
+            if (!Controllers.TryGetValue(deviceList[0], out var motion)) return;
+            if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
+            if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
             if (axis1 == null || axis2 == null) return;
             axis1.SingleAbsoluteMove(startX);
             axis2.SingleAbsoluteMove(startY);
             axis1.Wait();
             axis2.Wait();
-            
+
+            if (!Cameras.TryGetValue(deviceList[3], out var camera)) return;
             if (camera == null)
             {
                 FileManager.AppendLog("Log", "错误记录", "没有相机，自动运行停止。");
@@ -430,11 +490,8 @@ namespace CompreDemo
 
             for (int i = 1; i <= 12; i++)
             {
-                
-
-                CameraAction?.Invoke();
-
-                AutoRun.WaitOne();
+                DoWork(usingDevice);
+                //ProcessControl.WaitOne();
 
                 if (i == 12) continue;
                 if (i % 3 == 0)

@@ -53,7 +53,6 @@
             LB轴卡信息 = new Label();
             BTN轴删除 = new Button();
             BTN轴控制 = new Button();
-            LB输入 = new Label();
             MS菜单.SuspendLayout();
             SuspendLayout();
             // 
@@ -153,7 +152,7 @@
             // 
             TSM打开测试窗口.DropDownItems.AddRange(new ToolStripItem[] { TST测试轴1名称, TST测试轴2名称 });
             TSM打开测试窗口.Name = "TSM打开测试窗口";
-            TSM打开测试窗口.Size = new Size(180, 22);
+            TSM打开测试窗口.Size = new Size(148, 22);
             TSM打开测试窗口.Text = "打开测试窗口";
             TSM打开测试窗口.Click += TSM打开测试窗口_Click;
             // 
@@ -175,7 +174,7 @@
             // 
             TSM自动轨迹测试.DropDownItems.AddRange(new ToolStripItem[] { TST轨迹 });
             TSM自动轨迹测试.Name = "TSM自动轨迹测试";
-            TSM自动轨迹测试.Size = new Size(180, 22);
+            TSM自动轨迹测试.Size = new Size(148, 22);
             TSM自动轨迹测试.Text = "自动轨迹测试";
             TSM自动轨迹测试.Click += TSM自动轨迹测试_Click;
             // 
@@ -265,21 +264,11 @@
             BTN轴控制.UseVisualStyleBackColor = true;
             BTN轴控制.Click += BTN轴控制_Click;
             // 
-            // LB输入
-            // 
-            LB输入.AutoSize = true;
-            LB输入.Location = new Point(600, 42);
-            LB输入.Name = "LB输入";
-            LB输入.Size = new Size(32, 17);
-            LB输入.TabIndex = 13;
-            LB输入.Text = "输入";
-            // 
             // MotionSetting
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 451);
-            Controls.Add(LB输入);
             Controls.Add(BTN轴控制);
             Controls.Add(BTN轴删除);
             Controls.Add(LB轴卡信息);
@@ -333,6 +322,5 @@
         private ToolStripMenuItem TSM连接管理;
         private ToolStripMenuItem TSM连接当前卡;
         private ToolStripMenuItem TSM断开当前卡;
-        private Label LB输入;
     }
 }

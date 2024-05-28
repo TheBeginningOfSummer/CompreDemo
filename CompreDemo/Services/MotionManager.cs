@@ -43,6 +43,7 @@ namespace Services
         public virtual double CurrentPosition { get; set; }
         public virtual double CurrentSpeed { get; set; }
         #endregion
+
         //参数存储的路径文件
         public KeyValueManager? AxisConfig;
         public static string RootPath = "Motion";

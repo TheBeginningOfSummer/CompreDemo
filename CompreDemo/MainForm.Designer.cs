@@ -40,6 +40,7 @@
             BTN初始化 = new Button();
             autoRun = new System.ComponentModel.BackgroundWorker();
             TB信息 = new TextBox();
+            TSM列表设置 = new ToolStripMenuItem();
             MS菜单.SuspendLayout();
             SuspendLayout();
             // 
@@ -56,7 +57,7 @@
             // TSM设置
             // 
             TSM设置.Alignment = ToolStripItemAlignment.Right;
-            TSM设置.DropDownItems.AddRange(new ToolStripItem[] { TSM相机配置, TSM控制卡配置 });
+            TSM设置.DropDownItems.AddRange(new ToolStripItem[] { TSM相机配置, TSM控制卡配置, TSM列表设置 });
             TSM设置.Name = "TSM设置";
             TSM设置.Size = new Size(44, 21);
             TSM设置.Text = "设置";
@@ -64,14 +65,14 @@
             // TSM相机配置
             // 
             TSM相机配置.Name = "TSM相机配置";
-            TSM相机配置.Size = new Size(136, 22);
+            TSM相机配置.Size = new Size(180, 22);
             TSM相机配置.Text = "相机配置";
             TSM相机配置.Click += TSM相机配置_Click;
             // 
             // TSM控制卡配置
             // 
             TSM控制卡配置.Name = "TSM控制卡配置";
-            TSM控制卡配置.Size = new Size(136, 22);
+            TSM控制卡配置.Size = new Size(180, 22);
             TSM控制卡配置.Text = "控制卡配置";
             TSM控制卡配置.Click += TSM控制卡配置_Click;
             // 
@@ -123,11 +124,18 @@
             // 
             // TB信息
             // 
-            TB信息.Location = new Point(272, 89);
+            TB信息.Location = new Point(143, 28);
             TB信息.Multiline = true;
             TB信息.Name = "TB信息";
             TB信息.Size = new Size(400, 222);
             TB信息.TabIndex = 6;
+            // 
+            // TSM列表设置
+            // 
+            TSM列表设置.Name = "TSM列表设置";
+            TSM列表设置.Size = new Size(180, 22);
+            TSM列表设置.Text = "列表设置";
+            TSM列表设置.Click += TSM列表设置_Click;
             // 
             // MainForm
             // 
@@ -166,5 +174,6 @@
         private Button BTN初始化;
         private System.ComponentModel.BackgroundWorker autoRun;
         private TextBox TB信息;
+        private ToolStripMenuItem TSM列表设置;
     }
 }

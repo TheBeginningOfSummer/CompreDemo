@@ -15,20 +15,6 @@ namespace CompreDemo.Forms
             UpdateCB();
         }
 
-        public static void StartTask(ref Task? task, Action action)
-        {
-            if (task == null)
-            {
-                task = new Task(action);
-            }
-            else
-            {
-                if (task.Status == TaskStatus.Running) task.Wait();
-                task = new Task(action);
-            }
-            task.Start();
-        }
-
         public void UpdateCB()
         {
             CB轴卡.Items.Clear();
@@ -73,7 +59,7 @@ namespace CompreDemo.Forms
                         input += Environment.NewLine;
                     input += $"输入{i}：{@in[i]} ";
                 }
-                LB输入.Invoke(new Action(() => { LB输入.Text = input; }));
+                //LB输入.Invoke(new Action(() => { LB输入.Text = input; }));
             }
         }
 
@@ -144,15 +130,15 @@ namespace CompreDemo.Forms
             switch (TST轨迹.Text)
             {
                 case "0":
-                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track1(motion, 0, 7, 400, 50)));
+                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.AutoRun1(motion, 0, 7, 400, 50)));
                     break;
                 case "1":
-                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track2(motion, 300, 5, 300, 50)));
+                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.AutoRun2(motion, 300, 5, 300, 50)));
                     break;
                 case "2":
                     if (testMotion != null)
                         if (!testMotion.IsCompleted) break;
-                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.Track3(motion, device.CameraList["cam1"], 0, 0, 50, 100)));
+                    Processkit.StartTask(ref testMotion, new Action(() => device.AutoRun3("Device1", 0, 0, 50, 100)));
                     break;
             }
         }

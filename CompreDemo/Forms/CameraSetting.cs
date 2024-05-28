@@ -16,8 +16,8 @@ namespace CompreDemo.Forms
         {
             get
             {
-                string[] message = LB相机列表.Text.Split('-');
-                if (device.CameraList!.TryGetValue(message[0], out selectedCamera))
+                string[] message = LB相机列表.Text.Split('[');
+                if (device.Cameras!.TryGetValue(message[0], out selectedCamera))
                     return selectedCamera;
                 return null;
             }
@@ -41,7 +41,7 @@ namespace CompreDemo.Forms
         //绘制的窗口
         private Window? window;
         //绘制的坐标
-        readonly int[] currentROI = [0, 0, 10, 10];
+        int[] currentROI = [0, 0, 10, 10];
         #endregion
 
         public CameraSetting()
@@ -49,7 +49,6 @@ namespace CompreDemo.Forms
             InitializeComponent();
             UpdateCameraLB();
             MouseCallbackEvent = new MouseCallback(MouseDraw);
-            //Task.Run(UpdateImage);
             UpdateROICB();
         }
 
@@ -91,9 +90,9 @@ namespace CompreDemo.Forms
                     {
                         int[] roi = new int[4];
                         currentROI.CopyTo(roi, 0);
-                        if (!device.ROIList.TryAdd(input, roi))
-                            device.ROIList[input] = roi;
-                        DeviceManager.SaveConfig("Cameras", "ROIList.json", device.ROIList);
+                        if (!device.ROIDic.TryAdd(input, roi))
+                            device.ROIDic[input] = roi;
+                        DeviceManager.SaveConfig("Cameras", "ROIList.json", device.ROIDic);
                         UpdateROICB();
                     }
                     window?.Dispose();
@@ -124,10 +123,9 @@ namespace CompreDemo.Forms
         /// </summary>
         private void UpdateCameraLB()
         {
-            if (device.CameraList == null) return;
             LB相机列表.Items.Clear();
-            foreach (var camera in device.CameraList)
-                LB相机列表.Items.Add($"{camera.Key}-{camera.Value.Key}");
+            foreach (var camera in device.Cameras)
+                LB相机列表.Items.Add($"{camera.Key}[{camera.Value.Key}]");
         }
         /// <summary>
         /// 得到所有相机，并更新到下拉列表
@@ -148,7 +146,7 @@ namespace CompreDemo.Forms
         private void UpdateROICB()
         {
             CB目标区域.Items.Clear();
-            foreach (var item in device.ROIList)
+            foreach (var item in device.ROIDic)
                 CB目标区域.Items.Add(item.Key);
         }
         /// <summary>
@@ -218,6 +216,11 @@ namespace CompreDemo.Forms
         #endregion
 
         #region 相机
+        private void CB目标区域_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            currentROI = device.ROIDic[CB目标区域.Text];
+        }
+
         private void BTN查找设备_Click(object sender, EventArgs e)
         {
             UpdateCameraCB();
@@ -266,8 +269,8 @@ namespace CompreDemo.Forms
             if (CheckItem(CurrentImage, "截取图片为空。"))
             {
                 Mat image = BitmapConverter.ToMat(CurrentImage!);
-                Mat roiMat = new(image, new Rect(currentROI[0], currentROI[1], currentROI[2], currentROI[3]));
-                PB图片.Image = BitmapConverter.ToBitmap(roiMat);
+                image = new(image, new Rect(currentROI[0], currentROI[1], currentROI[2], currentROI[3]));
+                PB图片.Image = BitmapConverter.ToBitmap(image);
             }
         }
 
@@ -374,7 +377,6 @@ namespace CompreDemo.Forms
                 if (SelectedCamera.StartGrab())
                 {
                     ShowMessage($"{LB相机列表.SelectedItem}开始采集。");
-                    //Task.Run(() => device.WaitImage(selectedCamera.Device));
                 }
                 else
                 {
@@ -427,22 +429,9 @@ namespace CompreDemo.Forms
 
         #endregion
 
-        private void BTN目标区域_Click(object sender, EventArgs e)
-        {
-            if (CurrentImage == null) return;
-            if (device.ROIList.TryGetValue(CB目标区域.Text, out var roi))
-            {
-                OpenCvSharp.Point point1 = new(roi[0], roi[1]);
-                OpenCvSharp.Point point2 = new(roi[0] + roi[2], roi[1] + roi[3]);
-                Mat image = CurrentImage.ToMat();
-                Cv2.Rectangle(image, point1, point2, Scalar.Red, 2);
-                PB图片.Image = image.ToBitmap();
-            }
-        }
-
         #region 图片事件
         bool isMove;
-        int pictureX, pictureY = 0; 
+        int pictureX, pictureY = 0;
         int mouseX, mouseY = 0;
         private void PB图片_MouseDown(object sender, MouseEventArgs e)
         {
@@ -472,9 +461,8 @@ namespace CompreDemo.Forms
 
         private void PB图片_Resize(object sender, EventArgs e)
         {
-            TB信息.Text = $"{PB图片.Width}:{PB图片.Height}";
+            //TB信息.Text = $"{PB图片.Width}:{PB图片.Height}";
         }
-        #endregion
 
         public static Mat GetDisplayPicture(Mat background, int height, int width, Mat sourcePicture, int xOffset, int yOffset)
         {
@@ -517,6 +505,20 @@ namespace CompreDemo.Forms
                 }
             }
         }
+        #endregion
+
+        private void BTN目标区域_Click(object sender, EventArgs e)
+        {
+            if (CurrentImage == null) return;
+            if (device.ROIDic.TryGetValue(CB目标区域.Text, out var roi))
+            {
+                OpenCvSharp.Point point1 = new(roi[0], roi[1]);
+                OpenCvSharp.Point point2 = new(roi[0] + roi[2], roi[1] + roi[3]);
+                Mat image = CurrentImage.ToMat();
+                Cv2.Rectangle(image, point1, point2, Scalar.Red, 2);
+                PB图片.Image = image.ToBitmap();
+            }
+        }
 
         private void BTN测试_Click(object sender, EventArgs e)
         {
@@ -544,8 +546,9 @@ namespace CompreDemo.Forms
             //Mat matRect = new Mat(matBack, rect);
             //matBoy.CopyTo(matRect);//用matboy替换roi的区域
             //Cv2.ImShow(" ", matBack);
-            DeviceManager.AutoRun.Set();
+            DeviceManager.ProcessControl.Set();
         }
 
+        
     }
 }

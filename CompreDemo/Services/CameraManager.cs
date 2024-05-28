@@ -603,7 +603,7 @@ namespace Services
             if (Device == null) return default;
             if (Device.WaitForFrameTriggerReady(out IGrabbedRawData data, 1000))
             {
-                Trace.WriteLine(data.BlockID);
+                //Trace.WriteLine(data.BlockID);
                 return data.ToBitmap(color);
             }
             return default;
