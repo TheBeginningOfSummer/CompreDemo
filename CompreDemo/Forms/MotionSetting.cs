@@ -106,21 +106,21 @@ namespace CompreDemo.Forms
         {
             var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
             if (currentAxis == null) return;
-            ManualControl manualControl = new ManualControl(currentAxis);
+            ManualControl manualControl = new(currentAxis);
             manualControl.Show();
         }
 
         private void TSM打开测试窗口_Click(object sender, EventArgs e)
         {
-            string[] deviceList = device.UsingDevices[usingDevice];
-            if (deviceList.Length < 3) return;
-            if (!device.Controllers.TryGetValue(deviceList[0], out var motion)) return;
-            if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
-            if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
-            if (axis1 == null || axis2 == null) return;
+            //string[] deviceList = device.UsingDevices[usingDevice];
+            //if (deviceList.Length < 3) return;
+            //if (!device.Controllers.TryGetValue(deviceList[0], out var motion)) return;
+            //if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
+            //if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
+            //if (axis1 == null || axis2 == null) return;
 
-            MotionTest motionTest = new(axis1, axis2);
-            motionTest.Show();
+            //MotionTest motionTest = new(axis1, axis2);
+            //motionTest.Show();
         }
 
         private void TSM自动轨迹测试_Click(object sender, EventArgs e)

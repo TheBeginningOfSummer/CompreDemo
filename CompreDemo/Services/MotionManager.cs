@@ -10,9 +10,9 @@ namespace Services
     public abstract class BaseAxis
     {
         #region 参数
-        public string? ControllerName;
-        public string Name = "Axis0";
-        public int Number;
+        public string? ControllerName { get; set; }
+        public string Name { get; set; } = "defaultAxis";
+        public int Number { get; set; }
 
         public virtual double Type { get; set; }
         public virtual double Units { get; set; }
@@ -44,16 +44,22 @@ namespace Services
         public virtual double CurrentSpeed { get; set; }
         #endregion
 
+        public IntPtr Handle;
         //参数存储的路径文件
         public KeyValueManager? AxisConfig;
         public static string RootPath = "Motion";
 
         public BaseAxis()
         {
-            //AxisConfig = new KeyValueManager($"{Name}.json", $"{RootPath}\\{ControllerName}\\Axes");
+            
         }
 
         #region 方法
+        public void Save()
+        {
+            JsonManager.SaveJsonString($"{RootPath}\\{ControllerName}", $"{Name}.json", this);
+        }
+
         /// <summary>
         /// 从配置文件加载属性值
         /// </summary>
@@ -91,7 +97,10 @@ namespace Services
             AxisConfig.Change($"{Name} {property.Name}", property.GetValue(this)!.ToString()!);
         }
 
-        public abstract void Initialize();
+        public virtual void Initialize()
+        {
+
+        }
 
         public abstract void DefPos(double position = 0);
 
@@ -137,7 +146,7 @@ namespace Services
                 isMoving = value;
             }
         }
-        private double targetPosition;
+        private double targetPosition = 0;
         public override double TargetPosition
         {
             get
@@ -148,7 +157,7 @@ namespace Services
             }
             set { targetPosition = value; }
         }
-        private double currentPosition;
+        private double currentPosition = 0;
         public override double CurrentPosition
         {
             get
@@ -160,7 +169,7 @@ namespace Services
             }
             set { currentPosition = value; }
         }
-        private double currentSpeed;
+        private double currentSpeed = 0;
         public override double CurrentSpeed
         {
             get
@@ -182,9 +191,6 @@ namespace Services
             Name = axisName;
             Number = axisNumber;
             ControllerName = controllerName;
-
-            AxisConfig = new KeyValueManager($"{Name}.json", $"{RootPath}\\{ControllerName}\\Axes");
-            LoadAxisConfig();
         }
 
         #region 设置
@@ -391,18 +397,19 @@ namespace Services
                 isMoving = value;
             }
         }
-        private float targetPosition;
+        private float targetPosition = 0;
         public override double TargetPosition
         {
             get
             {
                 Zmcaux.ZAux_Direct_GetDpos(Handle, Number, ref targetPosition);
                 targetPosition = (float)Math.Round(targetPosition / (float)Units, 2); // 保留两位小数
+                if (double.IsNaN(targetPosition)) targetPosition = 0;
                 return targetPosition;
             }
             set { targetPosition = (float)value; }
         }
-        private double currentPosition;
+        private double currentPosition = 0;
         public override double CurrentPosition
         {
             get
@@ -410,11 +417,12 @@ namespace Services
                 float position = 0;
                 Zmcaux.ZAux_Direct_GetMpos(Handle, Number, ref position);
                 currentPosition = Math.Round(position / Units, 2); // 保留两位小数
+                if (double.IsNaN(currentPosition)) currentPosition = 0;
                 return currentPosition;
             }
             set { currentPosition = value; }
         }
-        private double currentSpeed;
+        private double currentSpeed = 0;
         public override double CurrentSpeed
         {
             get
@@ -422,13 +430,14 @@ namespace Services
                 float speed = 0;
                 Zmcaux.ZAux_Direct_GetMspeed(Handle, Number, ref speed);
                 currentSpeed = Math.Round(speed / Units, 2); // 保留两位小数
+                if (double.IsNaN(currentSpeed)) currentSpeed = 0;
                 return currentSpeed;
             }
             set { currentSpeed = value; }
         }
         #endregion
 
-        public IntPtr Handle;
+        
 
         public ZmotionAxis(IntPtr handle, string axisName, int axisNumber, string controllerName)
         {
@@ -436,9 +445,6 @@ namespace Services
             Name = axisName;
             Number = axisNumber;
             ControllerName = controllerName;
-
-            AxisConfig = new KeyValueManager($"{Name}.json", $"{RootPath}\\{ControllerName}\\Axes");
-            LoadAxisConfig();
         }
 
         #region 设置
@@ -546,15 +552,20 @@ namespace Services
 
     public abstract class MotionControl
     {
+        public static string RootPath = "Motion";
         public string Name { get; set; } = "DefaultController";
         public string IP { get; set; } = "127.0.0.1";
         public List<string> AxesName { get; set; } = [];
+
         public Dictionary<string, BaseAxis> Axes = [];
+        public BaseAxis? LoadAxis(string axisName)
+        {
+            return JsonManager.ReadJsonString<BaseAxis>($"{RootPath}\\{Name}", $"{axisName}.json");
+        }
         public abstract void Initialize();
         public abstract bool Connect();
         public abstract void Disconnect();
         public abstract bool IsConnected();
-        public abstract void ReinitializeAxes();//连接后需要重新加载handle，trio板卡可能不需要
         public abstract bool AddAxis(string axisName);
         public abstract bool RemoveAxis(string axisName);
         public abstract void Scram();
@@ -576,11 +587,8 @@ namespace Services
         {
             Name = controllerName;
             IP = ip;
-            for (int i = 0; i < axisName.Length; i++)
-            {
-                AxesName.Add(axisName[i]);
-                AddAxis(new TrioAxis(Trio, axisName[i], i, Name));
-            }
+            foreach (var axis in axisName)
+                AddAxis(axis);
         }
 
         public TrioMotionControl()
@@ -591,7 +599,8 @@ namespace Services
         #region 设置
         public override void Initialize()
         {
-            Trio.SetVariable("LIMIT_BUFFERED", 64);//运动缓存区设为64条指令
+            //Trio.SetVariable("LIMIT_BUFFERED", 64);//运动缓存区设为64条指令
+            LoadAxis();
         }
 
         public override bool Connect()
@@ -610,29 +619,31 @@ namespace Services
             return Trio.IsOpen(PortId.EthernetREMOTE);
         }
 
-        public override void ReinitializeAxes()
+        public void LoadAxis()
         {
-            Axes.Clear();
-            for (int i = 0; i < AxesName.Count; i++)
-                AddAxis(new TrioAxis(Trio, AxesName[i], i, Name));
-        }
-
-        private bool AddAxis(TrioAxis axis)
-        {
-            if (!Axes.ContainsKey(axis.Name))
+            foreach (var name in AxesName)
             {
-                Axes.Add(axis.Name, axis);
-                return true;
+                BaseAxis? axis = LoadAxis(name);
+                if (axis != null)
+                    Axes.TryAdd(axis.Name, axis);
+                else
+                    AddAxis(name);
             }
-            else
-                return false;
         }
 
         public override bool AddAxis(string axisName)
         {
-            if (AddAxis(new TrioAxis(Trio, axisName, Axes.Count, Name)))
+            int axisNumber = 0;
+            for (int i = 0; i < AxesName.Count + 1; i++)
             {
-                //添加轴信息
+                if (!Axes.Values.Select(x => x.Number).Contains(i))
+                {
+                    axisNumber = i;
+                    break;
+                }
+            }
+            if (Axes.TryAdd(axisName, new TrioAxis(Trio, axisName, axisNumber, Name)))
+            {
                 AxesName.Add(axisName);
                 return true;
             }
@@ -743,22 +754,19 @@ namespace Services
         {
             Name = controllerName;
             IP = ip;
-            for (int i = 0; i < axisName.Length; i++)
-            {
-                AxesName.Add(axisName[i]);
-                AddAxis(new ZmotionAxis(Zmotion, axisName[i], i, Name));
-            }
+            foreach (var axis in axisName)
+                AddAxis(axis);
         }
 
         public ZmotionMotionControl()
         {
-            //ReinitializeAxes();
+            
         }
 
         #region 设置
         public override void Initialize()
         {
-            
+            LoadAxis();
         }
 
         public void ECInitialize()
@@ -771,7 +779,11 @@ namespace Services
             //链接控制器 
             ErrorCode = Zmcaux.ZAux_OpenEth(IP, out Zmotion);
             if (Zmotion != (IntPtr)0)
+            {
+                foreach (var axis in Axes.Values)
+                    axis.Handle = Zmotion;
                 return true;
+            }
             else
                 return false;
         }
@@ -788,29 +800,36 @@ namespace Services
             return true;
         }
 
-        public override void ReinitializeAxes()
+        public void LoadAxis()
         {
-            Axes.Clear();
-            for (int i = 0; i < AxesName.Count; i++)
-                AddAxis(new ZmotionAxis(Zmotion, AxesName[i], i, Name));
-        }
-
-        public bool AddAxis(ZmotionAxis axis)
-        {
-            if (!Axes.ContainsKey(axis.Name))
+            foreach (var name in AxesName)
             {
-                Axes.Add(axis.Name, axis);
-                return true;
+                BaseAxis? axis = LoadAxis(name);
+                if (axis != null)
+                    Axes.TryAdd(axis.Name, axis);
+                else
+                    AddAxis(name);
             }
-            else
-                return false;
         }
 
         public override bool AddAxis(string axisName)
         {
-            if (AddAxis(new ZmotionAxis(Zmotion, axisName, Axes.Count, Name)))
+            int axisNumber = 0;
+            for (int i = 0; i < AxesName.Count + 1; i++)
             {
-                AxesName.Add(axisName);
+                if (!Axes.Values.Select(x => x.Number).Contains(i))
+                {
+                    axisNumber = i;
+                    break;
+                }
+            }
+            if (Axes.TryAdd(axisName, new ZmotionAxis(Zmotion, axisName, axisNumber, Name)))
+            {
+                if (!AxesName.Contains(axisName))
+                {
+                    //在通过AxesName创建轴时，AxesName集合不能更改
+                    AxesName.Add(axisName);
+                }
                 return true;
             }
             return false;

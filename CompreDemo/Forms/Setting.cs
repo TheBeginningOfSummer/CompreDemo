@@ -226,7 +226,8 @@ namespace CompreDemo.Forms
                 switch (settingType)
                 {
                     case "Axis":
-                        AxisSave();
+                        //AxisSave();
+                        baseAxis?.Save();
                         break;
                     case "Camera":
                         CameraSave();

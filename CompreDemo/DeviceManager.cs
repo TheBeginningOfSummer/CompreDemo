@@ -1,4 +1,5 @@
-﻿using CompreDemo.Services;
+﻿using CompreDemo.Forms;
+using CompreDemo.Services;
 using CSharpKit.FileManagement;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
@@ -54,7 +55,7 @@ namespace CompreDemo
             Enumerator.EnumerateDevices();
             Controllers = LoadConfig<MotionControl>(BaseAxis.RootPath, "Motion.json");
             foreach (var controller in Controllers.Values)
-                controller.ReinitializeAxes();
+                controller.Initialize();//加载轴
             Cameras = LoadConfig<HuarayCamera>("Cameras", "HuarayCameraList.json");
             ROIDic = LoadConfig<int[]>("Cameras", "ROIList.json");
             UsingDevices = LoadConfig<string[]>("Config", "UsingDevices.json");
@@ -65,10 +66,6 @@ namespace CompreDemo
             {
                 if (controller1.Connect())
                 {
-                    //轴卡重新初始化
-                    controller1.Initialize();
-                    //轴重新初始化，加载连接后的Handle
-                    controller1.ReinitializeAxes();
                     //轴参数重新初始化
                     foreach (var item in controller1.Axes.Values)
                         item.Initialize();
@@ -185,22 +182,11 @@ namespace CompreDemo
 
         public MotionControl? GetController(string controllerName)
         {
-            if (string.IsNullOrEmpty(controllerName)) return null;
-            if (Controllers == null) return null;
-            if (!Controllers.TryGetValue(controllerName, out MotionControl? value)) return null;
-            return value;
+            if (Controllers.TryGetValue(controllerName, out MotionControl? value))
+                return value;
+            return default;
         }
-        /// <summary>
-        /// 得到指定控制器的所有轴
-        /// </summary>
-        /// <param name="controllerName">控制器名</param>
-        /// <returns>所有轴</returns>
-        public Dictionary<string, BaseAxis>? GetAxes(string controllerName)
-        {
-            var controller = GetController(controllerName);
-            if (controller == null) return null;
-            return controller.Axes;
-        }
+
         /// <summary>
         /// 得到指定控制器的一个轴
         /// </summary>
@@ -209,33 +195,12 @@ namespace CompreDemo
         /// <returns>指定轴</returns>
         public BaseAxis? GetAxis(string controllerName, string axisName)
         {
-            var axes = GetAxes(controllerName);
-            if (axes == null) return null;
-            if (!axes.TryGetValue(axisName, out BaseAxis? value)) return null;
-            return value;
-        }
-
-        /// <summary>
-        /// 添加轴
-        /// </summary>
-        /// <param name="controllerName">控制器名</param>
-        /// <param name="axisName">要添加的轴名称</param>
-        public void AddAxis(string controllerName, string axisName)
-        {
-            var controller = GetController(controllerName);
-            if (controller == null) return;
-            controller.AddAxis(axisName);
-        }
-        /// <summary>
-        /// 清除所有轴的位置
-        /// </summary>
-        /// <param name="controllerName">控制器名称</param>
-        public void ClearPosition(string controllerName)
-        {
-            var axes = GetAxes(controllerName);
-            if (axes == null) return;
-            foreach (var item in axes.Values)
-                item.DefPos();
+            if (Controllers.TryGetValue(controllerName, out var controller))
+            {
+                if (controller.Axes.TryGetValue(axisName, out var axis))
+                    return axis;
+            }
+            return default;
         }
 
         public bool ModifyInfo(string controllerName, string ip, List<string> axesName, string type)
@@ -268,11 +233,9 @@ namespace CompreDemo
                 foreach (var item in axesName)
                     if (string.IsNullOrEmpty(item)) return false;
                 controller.IP = ip;
-                //controller.ReinitializeAxes();
                 foreach (string axisName in axesName)
                     //添加轴
                     controller.AddAxis(axisName);
-                //controller.ReinitializeAxes();
             }
             SaveControllerConfig();
             return true;
@@ -310,14 +273,9 @@ namespace CompreDemo
             if (controller == null) return false;
             if (controller.Connect())
             {
-                //轴卡重新初始化
-                controller.Initialize();
-                //轴重新初始化，加载连接后的Handle
-                controller.ReinitializeAxes();
                 //轴参数重新初始化
                 foreach (var item in controller.Axes.Values)
                     item.Initialize();
-                //MessageBox.Show("连接成功");
                 return true;
             }
             else
