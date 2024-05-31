@@ -33,15 +33,20 @@
             TSM设置 = new ToolStripMenuItem();
             TSM相机配置 = new ToolStripMenuItem();
             TSM控制卡配置 = new ToolStripMenuItem();
+            TSM列表设置 = new ToolStripMenuItem();
             BTN手动模式 = new Button();
             BTN自动模式 = new Button();
-            BTN自动运行 = new Button();
-            BTN自动停止 = new Button();
-            BTN初始化 = new Button();
+            BTN开始测试 = new Button();
+            BTN停止测试 = new Button();
+            BTN重新测试 = new Button();
             autoRun = new System.ComponentModel.BackgroundWorker();
             TB信息 = new TextBox();
-            TSM列表设置 = new ToolStripMenuItem();
+            GB测试结果 = new GroupBox();
+            GB信息 = new GroupBox();
+            BTN清除 = new Button();
+            BTN查看信息 = new Button();
             MS菜单.SuspendLayout();
+            GB信息.SuspendLayout();
             SuspendLayout();
             // 
             // MS菜单
@@ -50,7 +55,7 @@
             MS菜单.Items.AddRange(new ToolStripItem[] { TSM设置 });
             MS菜单.Location = new Point(0, 0);
             MS菜单.Name = "MS菜单";
-            MS菜单.Size = new Size(984, 25);
+            MS菜单.Size = new Size(1184, 25);
             MS菜单.TabIndex = 0;
             MS菜单.Text = "菜单";
             // 
@@ -65,20 +70,28 @@
             // TSM相机配置
             // 
             TSM相机配置.Name = "TSM相机配置";
-            TSM相机配置.Size = new Size(180, 22);
+            TSM相机配置.Size = new Size(136, 22);
             TSM相机配置.Text = "相机配置";
             TSM相机配置.Click += TSM相机配置_Click;
             // 
             // TSM控制卡配置
             // 
             TSM控制卡配置.Name = "TSM控制卡配置";
-            TSM控制卡配置.Size = new Size(180, 22);
+            TSM控制卡配置.Size = new Size(136, 22);
             TSM控制卡配置.Text = "控制卡配置";
             TSM控制卡配置.Click += TSM控制卡配置_Click;
             // 
+            // TSM列表设置
+            // 
+            TSM列表设置.Name = "TSM列表设置";
+            TSM列表设置.Size = new Size(136, 22);
+            TSM列表设置.Text = "列表设置";
+            TSM列表设置.Click += TSM列表设置_Click;
+            // 
             // BTN手动模式
             // 
-            BTN手动模式.Location = new Point(143, 463);
+            BTN手动模式.Anchor = AnchorStyles.Bottom;
+            BTN手动模式.Location = new Point(243, 663);
             BTN手动模式.Name = "BTN手动模式";
             BTN手动模式.Size = new Size(97, 46);
             BTN手动模式.TabIndex = 1;
@@ -87,65 +100,109 @@
             // 
             // BTN自动模式
             // 
-            BTN自动模式.Location = new Point(316, 463);
+            BTN自动模式.Anchor = AnchorStyles.Bottom;
+            BTN自动模式.Location = new Point(416, 663);
             BTN自动模式.Name = "BTN自动模式";
             BTN自动模式.Size = new Size(97, 46);
             BTN自动模式.TabIndex = 2;
             BTN自动模式.Text = "自动模式";
             BTN自动模式.UseVisualStyleBackColor = true;
             // 
-            // BTN自动运行
+            // BTN开始测试
             // 
-            BTN自动运行.Location = new Point(477, 463);
-            BTN自动运行.Name = "BTN自动运行";
-            BTN自动运行.Size = new Size(97, 46);
-            BTN自动运行.TabIndex = 3;
-            BTN自动运行.Text = "自动运行";
-            BTN自动运行.UseVisualStyleBackColor = true;
-            BTN自动运行.Click += BTN自动运行_Click;
+            BTN开始测试.Anchor = AnchorStyles.Bottom;
+            BTN开始测试.Location = new Point(577, 663);
+            BTN开始测试.Name = "BTN开始测试";
+            BTN开始测试.Size = new Size(97, 46);
+            BTN开始测试.TabIndex = 3;
+            BTN开始测试.Text = "开始测试";
+            BTN开始测试.UseVisualStyleBackColor = true;
+            BTN开始测试.Click += BTN开始测试_Click;
             // 
-            // BTN自动停止
+            // BTN停止测试
             // 
-            BTN自动停止.Location = new Point(626, 463);
-            BTN自动停止.Name = "BTN自动停止";
-            BTN自动停止.Size = new Size(97, 46);
-            BTN自动停止.TabIndex = 4;
-            BTN自动停止.Text = "自动停止";
-            BTN自动停止.UseVisualStyleBackColor = true;
+            BTN停止测试.Anchor = AnchorStyles.Bottom;
+            BTN停止测试.Location = new Point(726, 663);
+            BTN停止测试.Name = "BTN停止测试";
+            BTN停止测试.Size = new Size(97, 46);
+            BTN停止测试.TabIndex = 4;
+            BTN停止测试.Text = "停止测试";
+            BTN停止测试.UseVisualStyleBackColor = true;
             // 
-            // BTN初始化
+            // BTN重新测试
             // 
-            BTN初始化.Location = new Point(775, 463);
-            BTN初始化.Name = "BTN初始化";
-            BTN初始化.Size = new Size(97, 46);
-            BTN初始化.TabIndex = 5;
-            BTN初始化.Text = "初始化";
-            BTN初始化.UseVisualStyleBackColor = true;
+            BTN重新测试.Anchor = AnchorStyles.Bottom;
+            BTN重新测试.Location = new Point(875, 663);
+            BTN重新测试.Name = "BTN重新测试";
+            BTN重新测试.Size = new Size(97, 46);
+            BTN重新测试.TabIndex = 5;
+            BTN重新测试.Text = "重新测试";
+            BTN重新测试.UseVisualStyleBackColor = true;
+            BTN重新测试.Click += BTN初始化_Click;
             // 
             // TB信息
             // 
-            TB信息.Location = new Point(143, 28);
+            TB信息.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            TB信息.Location = new Point(6, 22);
             TB信息.Multiline = true;
             TB信息.Name = "TB信息";
-            TB信息.Size = new Size(400, 222);
+            TB信息.ReadOnly = true;
+            TB信息.ScrollBars = ScrollBars.Vertical;
+            TB信息.Size = new Size(308, 420);
             TB信息.TabIndex = 6;
             // 
-            // TSM列表设置
+            // GB测试结果
             // 
-            TSM列表设置.Name = "TSM列表设置";
-            TSM列表设置.Size = new Size(180, 22);
-            TSM列表设置.Text = "列表设置";
-            TSM列表设置.Click += TSM列表设置_Click;
+            GB测试结果.Location = new Point(82, 77);
+            GB测试结果.Name = "GB测试结果";
+            GB测试结果.Size = new Size(133, 155);
+            GB测试结果.TabIndex = 7;
+            GB测试结果.TabStop = false;
+            GB测试结果.Text = "测试结果";
+            // 
+            // GB信息
+            // 
+            GB信息.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            GB信息.Controls.Add(BTN清除);
+            GB信息.Controls.Add(BTN查看信息);
+            GB信息.Controls.Add(TB信息);
+            GB信息.Location = new Point(852, 77);
+            GB信息.Name = "GB信息";
+            GB信息.Size = new Size(320, 500);
+            GB信息.TabIndex = 8;
+            GB信息.TabStop = false;
+            GB信息.Text = "信息";
+            // 
+            // BTN清除
+            // 
+            BTN清除.Anchor = AnchorStyles.Bottom;
+            BTN清除.Location = new Point(109, 448);
+            BTN清除.Name = "BTN清除";
+            BTN清除.Size = new Size(97, 46);
+            BTN清除.TabIndex = 9;
+            BTN清除.Text = "清除";
+            BTN清除.UseVisualStyleBackColor = true;
+            // 
+            // BTN查看信息
+            // 
+            BTN查看信息.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            BTN查看信息.Location = new Point(6, 448);
+            BTN查看信息.Name = "BTN查看信息";
+            BTN查看信息.Size = new Size(97, 46);
+            BTN查看信息.TabIndex = 9;
+            BTN查看信息.Text = "查看信息";
+            BTN查看信息.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(984, 561);
-            Controls.Add(TB信息);
-            Controls.Add(BTN初始化);
-            Controls.Add(BTN自动停止);
-            Controls.Add(BTN自动运行);
+            ClientSize = new Size(1184, 761);
+            Controls.Add(GB信息);
+            Controls.Add(GB测试结果);
+            Controls.Add(BTN重新测试);
+            Controls.Add(BTN停止测试);
+            Controls.Add(BTN开始测试);
             Controls.Add(BTN自动模式);
             Controls.Add(BTN手动模式);
             Controls.Add(MS菜单);
@@ -157,6 +214,8 @@
             FormClosing += MainForm_FormClosing;
             MS菜单.ResumeLayout(false);
             MS菜单.PerformLayout();
+            GB信息.ResumeLayout(false);
+            GB信息.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -169,11 +228,15 @@
         private ToolStripMenuItem TSM控制卡配置;
         private Button BTN手动模式;
         private Button BTN自动模式;
-        private Button BTN自动运行;
-        private Button BTN自动停止;
-        private Button BTN初始化;
+        private Button BTN开始测试;
+        private Button BTN停止测试;
+        private Button BTN重新测试;
         private System.ComponentModel.BackgroundWorker autoRun;
         private TextBox TB信息;
         private ToolStripMenuItem TSM列表设置;
+        private GroupBox GB测试结果;
+        private GroupBox GB信息;
+        private Button BTN清除;
+        private Button BTN查看信息;
     }
 }

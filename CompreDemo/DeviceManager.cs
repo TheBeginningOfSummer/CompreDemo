@@ -1,9 +1,11 @@
-﻿using CSharpKit.FileManagement;
+﻿using CompreDemo.Services;
+using CSharpKit.FileManagement;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using PaddleOCRSharp;
 using Services;
 using ThridLibray;
+using LogType = CompreDemo.Services.LogType;
 
 namespace CompreDemo
 {
@@ -39,18 +41,8 @@ namespace CompreDemo
 
         public Dictionary<string, int[]> ROIDic = [];
 
-        public Action<string>? ErrorAction;
-
         public DeviceManager()
         {
-            try
-            {
-                InitializeDevices("Device1");
-            }
-            catch (Exception e)
-            {
-                FormMethod.ShowErrorBox(e.Message);
-            }
             OCRParameter oCRParameter = new();
             engine = new PaddleOCREngine(null, oCRParameter);
         }
@@ -67,7 +59,7 @@ namespace CompreDemo
             ROIDic = LoadConfig<int[]>("Cameras", "ROIList.json");
             UsingDevices = LoadConfig<string[]>("Config", "UsingDevices.json");
             #endregion
-            
+
             #region 设备初始化
             if (Controllers!.TryGetValue(UsingDevices[usingDevice][0], out var controller1))
             {
@@ -80,36 +72,37 @@ namespace CompreDemo
                     //轴参数重新初始化
                     foreach (var item in controller1.Axes.Values)
                         item.Initialize();
+                    NotifyHandle.Record("控制卡初始化完成。", LogType.Modification);
                 }
                 else
                 {
-                    //连接控制器失败
+                    NotifyHandle.Record("控制卡连接失败。", LogType.Error);
                 }
             }
             else
             {
-                //得到控制器失败
+                NotifyHandle.Record("控制卡未在设备列表中。", LogType.Error);
             }
             if (Cameras!.TryGetValue(UsingDevices[usingDevice][3], out var camera1))
             {
                 camera1.OpenCamera();
-                camera1.Device?.TriggerSet.Open(TriggerSourceEnum.Software);
-                camera1.StartGrab();
+                if (camera1.Device == null)
+                    NotifyHandle.Record("相机打开失败。", LogType.Error);
+                else
+                {
+                    camera1.Device.TriggerSet.Open(TriggerSourceEnum.Software);
+                    if (camera1.StartGrab())
+                        NotifyHandle.Record("相机开始采集。", LogType.Modification);
+                }
             }
             else
             {
-                FileManager.AppendLog("Log", "错误记录", "相机加载失败。");
+                NotifyHandle.Record("相机未在设备列表中。", LogType.Error);
             }
             #endregion
         }
 
         #region 方法
-        public void RecordAndShow(string message)
-        {
-            FileManager.AppendLog("Log", "错误记录", message);
-            ErrorAction?.Invoke(message);
-        }
-
         public string OCR(Bitmap bitmap)
         {
             var oCRResult = engine.DetectText(bitmap);
@@ -262,7 +255,7 @@ namespace CompreDemo
                         Controllers!.Add(controllerName, new ZmotionMotionControl(controllerName, ip, [.. axesName]));
                         break;
                     case "Trio":
-                        Controllers!.Add(controllerName, new TrioMotionControl(controllerName, ip, axesName.ToArray()));
+                        Controllers!.Add(controllerName, new TrioMotionControl(controllerName, ip, [.. axesName]));
                         break;
                     default:
                         break;
@@ -369,6 +362,7 @@ namespace CompreDemo
                     string code = OCR(imageMat.ToBitmap());
 
                     MessageBox.Show(code);
+
                     //if (code != "default")
                     //{
                     //    if (code == targetCode[i])
@@ -389,84 +383,15 @@ namespace CompreDemo
                 }
                 else
                 {
-                    RecordAndShow("捕获图像失败。请检查相机。");
+                    NotifyHandle.Record("捕获图像失败。请检查相机。", LogType.Error);
                 }
             }
         }
 
-        public static void AutoRun1(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
-        {
-            BaseAxis axis1 = motion.Axes["Axis1"];
-            BaseAxis axis2 = motion.Axes["Axis2"];
-            if (axis1 == null || axis2 == null) return;
-            axis1.SingleAbsoluteMove(startX); axis1.Wait();
-            //if (BGW_Auto.CancellationPending) return;
-            //suspend.WaitOne();
-            if (times % 2 != 0)
-            {
-                //int remainder = cutTimes % 2;
-                for (int i = 0; i < times / 2; i++)
-                {
-                    axis2.SingleAbsoluteMove(targetPosY1);
-                    axis2.Wait();
-                    axis1.SingleRelativeMove(intervalX1);
-                    axis1.Wait();
-                    //if (BGW_Auto.CancellationPending) return;
-                    axis2.SingleAbsoluteMove(0);
-                    axis2.Wait();
-                    axis1.SingleRelativeMove(intervalX1);
-                    axis1.Wait();
-                    //if (BGW_Auto.CancellationPending) return;
-                    //suspend.WaitOne();
-                }
-                axis2.SingleAbsoluteMove(targetPosY1);
-                axis2.Wait();
-            }
-            else
-            {
-                for (int i = 0; i < times / 2; i++)
-                {
-                    axis2.SingleAbsoluteMove(targetPosY1);
-                    axis2.Wait();
-                    axis1.SingleRelativeMove(intervalX1);
-                    axis1.Wait();
-                    //if (BGW_Auto.CancellationPending) return;
-                    axis2.SingleAbsoluteMove(0);
-                    axis2.Wait();
-                    axis1.SingleRelativeMove(intervalX1);
-                    axis1.Wait();
-                    //if (BGW_Auto.CancellationPending) return;
-                    //suspend.WaitOne();
-                }
-            }
-        }
-
-        public static void AutoRun2(MotionControl motion, double startX, int times, double targetPosY1, double intervalX1)
-        {
-            BaseAxis axis1 = motion.Axes["Axis1"];
-            BaseAxis axis2 = motion.Axes["Axis2"];
-            if (axis1 == null || axis2 == null) return;
-            axis1.SingleAbsoluteMove(startX);
-            axis1.Wait();
-            for (int i = 0; i < times; i++)
-            {
-                motion.SetOutput(0, 1);
-                axis2.SingleAbsoluteMove(targetPosY1);
-                axis2.Wait();
-                motion.SetOutput(0, 0);
-                axis1.SingleRelativeMove(intervalX1);
-                axis1.Wait();
-                axis2.SingleAbsoluteMove(0);
-                axis2.Wait();
-                //if (BGW_Auto.CancellationPending) return;
-                //suspend.WaitOne();
-            }
-        }
-
-        public void AutoRun3(string usingDevice, double startX, double startY, double intervalX, double intervalY)
+        public void AutoRun1(string usingDevice, int times, double startX, double startY, double intervalX, double targetY)
         {
             string[] deviceList = UsingDevices[usingDevice];
-            if (deviceList.Length < 4) return;
+            if (deviceList.Length < 3) return;
             if (!Controllers.TryGetValue(deviceList[0], out var motion)) return;
             if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
             if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
@@ -476,25 +401,105 @@ namespace CompreDemo
             axis1.Wait();
             axis2.Wait();
 
-            if (!Cameras.TryGetValue(deviceList[3], out var camera)) return;
-            if (camera == null)
+            //if (BGW_Auto.CancellationPending) return;
+            //suspend.WaitOne();
+            if (times % 2 != 0)
             {
-                FileManager.AppendLog("Log", "错误记录", "没有相机，自动运行停止。");
-                return;
+                //int remainder = cutTimes % 2;
+                for (int i = 0; i < times / 2; i++)
+                {
+                    axis2.SingleAbsoluteMove(targetY);
+                    axis2.Wait();
+                    axis1.SingleRelativeMove(intervalX);
+                    axis1.Wait();
+                    //if (BGW_Auto.CancellationPending) return;
+                    axis2.SingleAbsoluteMove(0);
+                    axis2.Wait();
+                    axis1.SingleRelativeMove(intervalX);
+                    axis1.Wait();
+                    //if (BGW_Auto.CancellationPending) return;
+                    //suspend.WaitOne();
+                }
+                axis2.SingleAbsoluteMove(targetY);
+                axis2.Wait();
             }
+            else
+            {
+                for (int i = 0; i < times / 2; i++)
+                {
+                    axis2.SingleAbsoluteMove(targetY);
+                    axis2.Wait();
+                    axis1.SingleRelativeMove(intervalX);
+                    axis1.Wait();
+                    //if (BGW_Auto.CancellationPending) return;
+                    axis2.SingleAbsoluteMove(0);
+                    axis2.Wait();
+                    axis1.SingleRelativeMove(intervalX);
+                    axis1.Wait();
+                    //if (BGW_Auto.CancellationPending) return;
+                    //suspend.WaitOne();
+                }
+            }
+        }
+
+        public void AutoRun2(string usingDevice, int times, double startX, double startY, double intervalX, double targetY)
+        {
+            string[] deviceList = UsingDevices[usingDevice];
+            if (deviceList.Length < 3) return;
+            if (!Controllers.TryGetValue(deviceList[0], out var motion)) return;
+            if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
+            if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
+            if (axis1 == null || axis2 == null) return;
+            axis1.SingleAbsoluteMove(startX);
+            axis2.SingleAbsoluteMove(startY);
+            axis1.Wait();
+            axis2.Wait();
+
+            for (int i = 0; i < times; i++)
+            {
+                motion.SetOutput(0, 1);
+                axis2.SingleAbsoluteMove(targetY);
+                axis2.Wait();
+                motion.SetOutput(0, 0);
+                axis1.SingleRelativeMove(intervalX);
+                axis1.Wait();
+                axis2.SingleAbsoluteMove(0);
+                axis2.Wait();
+                //if (BGW_Auto.CancellationPending) return;
+                //suspend.WaitOne();
+            }
+        }
+
+        public void AutoRun3(string usingDevice, int times, double startX, double startY, double length, double intervalX, double intervalY)
+        {
+            string[] deviceList = UsingDevices[usingDevice];
+            if (deviceList.Length < 4) return;
+            if (!Controllers.TryGetValue(deviceList[0], out var motion)) return;
+            if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
+            if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
+            if (!Cameras.TryGetValue(deviceList[3], out var camera)) return;
+            if (axis1 == null || axis2 == null) return;
+            if (camera.Device == null) return;
+            axis1.SingleAbsoluteMove(startX);
+            axis2.SingleAbsoluteMove(startY);
+            axis1.Wait();
+            axis2.Wait();
+
             if (camera.Device == null)
             {
-                FileManager.AppendLog("Log", "错误记录", "没有相机，自动运行停止。");
+                NotifyHandle.Record("未打开相机。", LogType.Error);
                 return;
             }
+            NotifyHandle.Record("设备准备完成，测试开始。", LogType.Modification);
+            Thread.Sleep(1000);
 
-            for (int i = 1; i <= 12; i++)
+            for (int i = 1; i <= times; i++)
             {
-                DoWork(usingDevice);
                 //ProcessControl.WaitOne();
+                DoWork(usingDevice);
 
-                if (i == 12) continue;
-                if (i % 3 == 0)
+                if (i == times) continue;
+                if (i % (int)length == 0)
                 {
                     axis1.SingleAbsoluteMove(startX);
                     axis2.SingleRelativeMove(intervalY);

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Services;
 
 namespace CompreDemo
 {
@@ -18,7 +14,16 @@ namespace CompreDemo
             set
             {
                 result = value;
-
+                if (result == 0)
+                    FormMethod.OnThread(Status, () => Status.BackColor = Color.Gray);
+                else if (result == 1)
+                    FormMethod.OnThread(Status, () => Status.BackColor = Color.Lime);
+                else if (result == 2)
+                    FormMethod.OnThread(Status, () => Status.BackColor = Color.OrangeRed);
+                else if (result == 2)
+                    FormMethod.OnThread(Status, () => Status.BackColor = Color.Yellow);
+                else
+                    FormMethod.OnThread(Status, () => Status.BackColor = Color.Red);
             }
         }
 
@@ -40,4 +45,20 @@ namespace CompreDemo
         }
 
     }
+
+    public class Tray
+    {
+        public Dictionary<int, Data> Tests { get; set; }
+
+        public Tray(int count = 12)
+        {
+            Tests = [];
+            for (int i = 0; i < count; i++)
+            {
+                Data data = new(DateTime.Now.ToString("G"), i + 1, 0);
+                Tests.Add(i + 1, data);
+            }
+        }
+    }
+
 }

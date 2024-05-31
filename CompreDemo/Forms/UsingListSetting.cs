@@ -15,14 +15,21 @@ namespace CompreDemo.Forms
 
         private void BTN添加_Click(object sender, EventArgs e)
         {
-            string name = Interaction.InputBox($"请输入名称：", "提示", "Device1");
-            if (string.IsNullOrEmpty(name)) return;
-            string[] devices = TBText.Text.Trim().Split('\n');
-            if (device.UsingDevices.TryAdd(name, devices))
+            try
             {
-                DeviceManager.SaveConfig("Config", "UsingDevices.json", device.UsingDevices);
-                FormMethod.ShowInfoBox("添加成功。");
-                FormMethod.UpdateListBox(LB使用设备列表, [.. device.UsingDevices.Keys]);
+                string name = Interaction.InputBox($"请输入名称：", "提示", "Device1");
+                if (string.IsNullOrEmpty(name)) return;
+                string[] devices = TBText.Text.Trim().Split("\r\n");
+                if (device.UsingDevices.TryAdd(name, devices))
+                {
+                    DeviceManager.SaveConfig("Config", "UsingDevices.json", device.UsingDevices);
+                    FormMethod.ShowInfoBox("添加成功。");
+                    FormMethod.UpdateListBox(LB使用设备列表, [.. device.UsingDevices.Keys]);
+                }
+            }
+            catch (Exception ex)
+            {
+                FormMethod.ShowErrorBox(ex.Message);
             }
         }
 

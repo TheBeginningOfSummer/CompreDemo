@@ -1,7 +1,4 @@
-﻿using OpenCvSharp;
-using ThridLibray;
-
-namespace Services
+﻿namespace Services
 {
     public class FormMethod
     {
@@ -34,27 +31,34 @@ namespace Services
             foreach (var item in data)
                 list.Items.Add(item);
         }
-    }
 
-    public class DisplayMat
-    {
-        private Mat? image;
-        public Mat? Image
+        /// <summary>
+        /// 得到一个矩形阵列的坐标
+        /// </summary>
+        /// <param name="x">阵列起始X坐标</param>
+        /// <param name="y">阵列起始Y坐标</param>
+        /// <param name="count">阵列元素个数</param>
+        /// <param name="length">每行的元素个数</param>
+        /// <param name="xInterval">阵列坐标x方向间距</param>
+        /// <param name="yInterval">阵列坐标y方向间距</param>
+        /// <returns>阵列坐标列表</returns>
+        public static List<Point> SetLocation(int x, int y, int count, int length, int xInterval, int yInterval)
         {
-            get { return image; }
-            set
+            int o = x;
+            List<Point> locationList = [];
+            for (int i = 0; i < count; i++)
             {
-                image?.Dispose();
-                if (value != null)
-                    image = new Mat(value, new Rect(0, 0, value.Width, value.Height));
-                
+                locationList.Add(new Point(x, y));
+                x += xInterval;
+                if ((i + 1) % length == 0)
+                {
+                    x = o;
+                    y += yInterval;
+                }
             }
+            return locationList;
         }
 
     }
 
-    public class Display : PictureBox
-    {
-        //protected displayMat dMat;
-    }
 }

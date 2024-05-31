@@ -1,4 +1,5 @@
 using CompreDemo.Forms;
+using CompreDemo.Services;
 using Services;
 
 namespace CompreDemo
@@ -8,22 +9,46 @@ namespace CompreDemo
         readonly DeviceManager device = DeviceManager.Instance;
         readonly MotionSetting motionSetting = new();
         readonly CameraSetting cameraSetting = new();
+        Tray currentTest = new();
 
         public MainForm()
         {
             InitializeComponent();
-            device.ErrorAction += ShowError;
-            autoRun.DoWork += AutoRun_DoWork;
+            try
+            {
+                NotifyHandle.Notify += ShowMessage;
+                autoRun.DoWork += AutoRun_DoWork;
+                device.InitializeDevices("Device1");
+                motionSetting.Initialize();
+                cameraSetting.Initialize();
+            }
+            catch (Exception e)
+            {
+                NotifyHandle.Record($"程序初始化失败。{e.Message}", LogType.Error);
+            }
         }
 
-        private void ShowError(string message)
+        private void ShowMessage(string message)
         {
-            TB信息.Invoke(() => { TB信息.Text += message + Environment.NewLine; });
+            FormMethod.OnThread(TB信息, () => TB信息.Text += $"[{DateTime.Now:G}] {message}{Environment.NewLine}");
         }
 
         private void AutoRun_DoWork(object? sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            device.AutoRun3("Device1", 0, 0, 50, 100);
+            InitializeCurrentTest(12, GB测试结果, currentTest);
+            //device.AutoRun3("Device1", 0, 0, 50, 100);
+        }
+
+        public static void InitializeCurrentTest(int count, Control control, Tray testTray)
+        {
+            control.Controls.Clear();
+            List<Point> location = FormMethod.SetLocation(30, 30, count, 3, 25, 25);
+            testTray = new(count);
+            for (int i = 0; i < testTray.Tests.Count; i++)
+            {
+                FormMethod.OnThread(testTray.Tests[i + 1].Status, () => testTray.Tests[i + 1].Status.Location = location[i]);
+                FormMethod.OnThread(control, () => control.Controls.Add(testTray.Tests[i + 1].Status));
+            }
         }
 
         private void TSM控制卡配置_Click(object sender, EventArgs e)
@@ -47,16 +72,22 @@ namespace CompreDemo
 
         }
 
-        private void BTN自动运行_Click(object sender, EventArgs e)
+        private void BTN开始测试_Click(object sender, EventArgs e)
         {
-            if (autoRun.IsBusy)
+            if (FormMethod.ShowQuestionBox("是否开始测试？") == DialogResult.Yes)
             {
-                FormMethod.ShowInfoBox("运行中。");
-                return;
+                if (autoRun.IsBusy)
+                {
+                    FormMethod.ShowInfoBox("运行中。");
+                    return;
+                }
+                autoRun.RunWorkerAsync();
             }
-            autoRun.RunWorkerAsync();
         }
 
-        
+        private void BTN初始化_Click(object sender, EventArgs e)
+        {
+            InitializeCurrentTest(12, GB测试结果, currentTest);
+        }
     }
 }

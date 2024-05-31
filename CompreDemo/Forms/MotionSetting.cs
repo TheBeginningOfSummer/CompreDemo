@@ -12,6 +12,10 @@ namespace CompreDemo.Forms
         public MotionSetting()
         {
             InitializeComponent();
+        }
+
+        public void Initialize()
+        {
             UpdateCB();
         }
 
@@ -67,13 +71,6 @@ namespace CompreDemo.Forms
         {
             if (CB轴卡.Text == null) return;
             UpdateInfo(CB轴卡.Text, LB轴卡信息);
-
-            //var motion = device.GetController(CB轴卡.Text);
-            //if (motion == null) return;
-
-            //if (getIO?.Status == TaskStatus.Running) cancellation.Cancel();
-            //getIO = Task.Run(() => UpdateIO(motion, 9, 9), cancellation.Token);
-
         }
 
         private void BTN轴卡设置_Click(object sender, EventArgs e)
@@ -115,30 +112,31 @@ namespace CompreDemo.Forms
 
         private void TSM打开测试窗口_Click(object sender, EventArgs e)
         {
-            var axis1 = device.GetAxis(CB轴卡.Text, TST测试轴1名称.Text);
-            var axis2 = device.GetAxis(CB轴卡.Text, TST测试轴2名称.Text);
+            string[] deviceList = device.UsingDevices[usingDevice];
+            if (deviceList.Length < 3) return;
+            if (!device.Controllers.TryGetValue(deviceList[0], out var motion)) return;
+            if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
+            if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
             if (axis1 == null || axis2 == null) return;
+
             MotionTest motionTest = new(axis1, axis2);
             motionTest.Show();
         }
 
         private void TSM自动轨迹测试_Click(object sender, EventArgs e)
         {
-            var motion = device.GetController(CB轴卡.Text);
-            if (motion == null) return;
-            
             switch (TST轨迹.Text)
             {
                 case "0":
-                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.AutoRun1(motion, 0, 7, 400, 50)));
+                    Processkit.StartTask(ref testMotion, new Action(() => device.AutoRun1("Device2", 7, 0, 0, 50, 400)));
                     break;
                 case "1":
-                    Processkit.StartTask(ref testMotion, new Action(() => DeviceManager.AutoRun2(motion, 300, 5, 300, 50)));
+                    Processkit.StartTask(ref testMotion, new Action(() => device.AutoRun2("Device2", 5, 0, 0, 50, 300)));
                     break;
                 case "2":
                     if (testMotion != null)
                         if (!testMotion.IsCompleted) break;
-                    Processkit.StartTask(ref testMotion, new Action(() => device.AutoRun3("Device1", 0, 0, 50, 100)));
+                    Processkit.StartTask(ref testMotion, new Action(() => device.AutoRun3("Device1", 12, 0, 0, 3, 50, 100)));
                     break;
             }
         }

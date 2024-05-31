@@ -47,8 +47,12 @@ namespace CompreDemo.Forms
         public CameraSetting()
         {
             InitializeComponent();
-            UpdateCameraLB();
             MouseCallbackEvent = new MouseCallback(MouseDraw);
+        }
+
+        public void Initialize()
+        {
+            UpdateCameraLB();
             UpdateROICB();
         }
 
@@ -522,31 +526,7 @@ namespace CompreDemo.Forms
 
         private void BTN测试_Click(object sender, EventArgs e)
         {
-            //Mat background = new(PB图片.Height, PB图片.Width, MatType.CV_8UC3);
-            //background.SetTo(new Scalar(0, 0, 0));
-
-            //Mat source1 = new Mat("C:\\Users\\1\\Desktop\\新建文件夹\\无标题22.png");
-            //Mat source = new Mat(source1, new Rect(0, 0, PB图片.Width - 100, PB图片.Height - 50));
-
-            //Rect rect = new Rect(100, 50, source.Width, source.Height);
-            //Mat roi = new Mat(background, rect);
-
-            //source.CopyTo(roi);
-            //Rect roi = new Rect(10, 10, 200, 200);
-            //Mat source = Cv2.ImRead("C:\\Users\\1\\Desktop\\新建文件夹\\无标题22.png");
-            //Mat source1 = new Mat(source, roi);
-
-            //Mat back =  new Mat(image, roi);
-
-            //source1.CopyTo(back);
-
-            //Mat matBack = new Mat("C:\\Users\\1\\Desktop\\新建文件夹\\无标题22.png");
-            //Mat matBoy = new Mat("C:\\Users\\1\\Desktop\\新建文件夹\\表值0.bmp");
-            //Rect rect = new Rect(100, 50, matBoy.Width, matBoy.Height);
-            //Mat matRect = new Mat(matBack, rect);
-            //matBoy.CopyTo(matRect);//用matboy替换roi的区域
-            //Cv2.ImShow(" ", matBack);
-            DeviceManager.ProcessControl.Set();
+            
         }
 
         
