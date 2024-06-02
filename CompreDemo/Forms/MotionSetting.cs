@@ -14,6 +14,7 @@ namespace CompreDemo.Forms
             InitializeComponent();
         }
 
+        #region 窗口方法
         public void Initialize()
         {
             UpdateCB();
@@ -66,48 +67,18 @@ namespace CompreDemo.Forms
                 //LB输入.Invoke(new Action(() => { LB输入.Text = input; }));
             }
         }
+        #endregion
+
+        private void MotionSetting_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            Hide();
+        }
 
         private void CB轴卡_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (CB轴卡.Text == null) return;
             UpdateInfo(CB轴卡.Text, LB轴卡信息);
-        }
-
-        private void BTN轴卡设置_Click(object sender, EventArgs e)
-        {
-            List<string> axes = [.. TB轴名称.Text.Split(';')];
-            if (device.ModifyInfo(CB轴卡.Text, TBIP地址.Text, axes, CB控制卡类型.Text))
-                MessageBox.Show("已修改", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            UpdateInfo(CB轴卡.Text, LB轴卡信息);
-            CB轴卡.Items.Clear();
-            foreach (var controller in device.Controllers!.Values)
-                CB轴卡.Items.Add(controller.Name);
-        }
-
-        private void BTN轴删除_Click(object sender, EventArgs e)
-        {
-            if (device.RemoveInfo(CB轴卡.Text, TB轴名称.Text))
-                MessageBox.Show("已删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            UpdateInfo(CB轴卡.Text, LB轴卡信息);
-            CB轴卡.Items.Clear();
-            foreach (var controller in device.Controllers!.Values)
-                CB轴卡.Items.Add(controller.Name);
-        }
-
-        private void BTN轴设置_Click(object sender, EventArgs e)
-        {
-            var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
-            if (currentAxis == null) return;
-            Setting axisSetting = new(currentAxis, "Layout1");
-            axisSetting.Show();
-        }
-
-        private void BTN轴控制_Click(object sender, EventArgs e)
-        {
-            var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
-            if (currentAxis == null) return;
-            ManualControl manualControl = new(currentAxis);
-            manualControl.Show();
         }
 
         private void TSM打开测试窗口_Click(object sender, EventArgs e)
@@ -154,10 +125,65 @@ namespace CompreDemo.Forms
             MessageBox.Show("断开连接", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void MotionSetting_FormClosing(object sender, FormClosingEventArgs e)
+        private void BTN轴卡设置_Click(object sender, EventArgs e)
         {
-            e.Cancel = true;
-            Hide();
+            List<string> axes = [.. TB轴名称.Text.Split(';')];
+            if (device.SetController(CB轴卡.Text, TBIP地址.Text, axes, CB控制卡类型.Text))
+                MessageBox.Show("已修改", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            UpdateCB();
+            UpdateInfo(CB轴卡.Text, LB轴卡信息);
         }
+
+        private void BTN轴卡删除_Click(object sender, EventArgs e)
+        {
+            var result = FormMethod.ShowQuestionBox("是否确定删除轴卡数据？");
+            if (result == DialogResult.Yes)
+            {
+                if (device.RemoveInfo(CB轴卡.Text))
+                    MessageBox.Show("已删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                UpdateCB();
+                UpdateInfo(CB轴卡.Text, LB轴卡信息);
+            }
+        }
+
+        private void BTN轴添加_Click(object sender, EventArgs e)
+        {
+            List<string> axes = [.. TB轴名称.Text.Split(';')];
+            if (device.AddAxes(CB轴卡.Text, axes))
+                MessageBox.Show("已添加。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            UpdateCB();
+            UpdateInfo(CB轴卡.Text, LB轴卡信息);
+        }
+
+        private void BTN轴删除_Click(object sender, EventArgs e)
+        {
+            var result = FormMethod.ShowQuestionBox("是否确定删除轴数据？");
+            if (result == DialogResult.Yes)
+            {
+                if (string.IsNullOrEmpty(TB轴名称.Text)) return;
+                if (device.RemoveInfo(CB轴卡.Text, TB轴名称.Text))
+                    MessageBox.Show("已删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                UpdateCB();
+                UpdateInfo(CB轴卡.Text, LB轴卡信息);
+            }
+        }
+
+        private void BTN轴参数设置_Click(object sender, EventArgs e)
+        {
+            var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
+            if (currentAxis == null) return;
+            Setting axisSetting = new(currentAxis, "Layout1");
+            axisSetting.Show();
+        }
+
+        private void BTN轴控制_Click(object sender, EventArgs e)
+        {
+            var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
+            if (currentAxis == null) return;
+            ManualControl manualControl = new(currentAxis);
+            manualControl.Show();
+        }
+
+        
     }
 }

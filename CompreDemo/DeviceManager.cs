@@ -1,5 +1,4 @@
-﻿using CompreDemo.Forms;
-using CompreDemo.Services;
+﻿using CompreDemo.Services;
 using CSharpKit.FileManagement;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
@@ -68,7 +67,7 @@ namespace CompreDemo
                 {
                     //轴参数重新初始化
                     foreach (var item in controller1.Axes.Values)
-                        item.Initialize();
+                        item.Initialize();//加载轴配置
                     NotifyHandle.Record("控制卡初始化完成。", LogType.Modification);
                 }
                 else
@@ -172,7 +171,7 @@ namespace CompreDemo
 
         #endregion
 
-        #region 控制器
+        #region 控制卡
         public void SaveControllerConfig()
         {
             string path = BaseAxis.RootPath;
@@ -203,39 +202,88 @@ namespace CompreDemo
             return default;
         }
 
-        public bool ModifyInfo(string controllerName, string ip, List<string> axesName, string type)
+        public bool AddController(string controllerName, string ip, List<string> axesName, string type)
+        {
+            if (string.IsNullOrEmpty(controllerName))
+            {
+                FormMethod.ShowInfoBox("新建轴卡名称不能为空。");
+                return false;
+            }
+            if (string.IsNullOrEmpty(ip))
+            {
+                FormMethod.ShowInfoBox("新建轴卡IP地址不能为空。");
+                return false;
+            }
+            if (axesName == null)
+            {
+                FormMethod.ShowInfoBox("新建轴卡轴名称不能为空。");
+                return false;
+            }
+            foreach (var item in axesName)
+            {
+                if (string.IsNullOrEmpty(item))
+                {
+                    FormMethod.ShowInfoBox("新建轴卡轴名称不能为空。");
+                    return false;
+                }
+            }
+            if (string.IsNullOrEmpty(type))
+            {
+                FormMethod.ShowInfoBox("请选择新建轴卡类型。");
+                return false;
+            }
+
+            switch (type)
+            {
+                case "Zmotion":
+                    Controllers!.Add(controllerName, new ZmotionMotionControl(controllerName, ip, [.. axesName]));
+                    return true;
+                case "Trio":
+                    Controllers!.Add(controllerName, new TrioMotionControl(controllerName, ip, [.. axesName]));
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public bool SetController(string controllerName, string ip, List<string> axesName, string type)
         {
             var controller = GetController(controllerName);
             if (controller == null)
             {
-                //如果不存在，则添加轴卡
-                if (string.IsNullOrEmpty(ip)) return false;
-                if (axesName == null) return false;
-                foreach (var item in axesName)
-                    if (string.IsNullOrEmpty(item)) return false;
-                if (string.IsNullOrEmpty(type)) return false;
-                switch (type)
+                if (AddController(controllerName, ip, axesName, type))
                 {
-                    case "Zmotion":
-                        Controllers!.Add(controllerName, new ZmotionMotionControl(controllerName, ip, [.. axesName]));
-                        break;
-                    case "Trio":
-                        Controllers!.Add(controllerName, new TrioMotionControl(controllerName, ip, [.. axesName]));
-                        break;
-                    default:
-                        break;
+                    SaveControllerConfig();
+                    return true;
                 }
             }
             else
             {
-                //如果控制器已经存在，则添加轴，修改IP
-                if (axesName == null) return false;
-                foreach (var item in axesName)
-                    if (string.IsNullOrEmpty(item)) return false;
-                controller.IP = ip;
+                if (!string.IsNullOrEmpty(ip))
+                    controller.IP = ip;
+                SaveControllerConfig();
+                return true;
+            }
+            return false;
+        }
+
+        public bool AddAxes(string controllerName, List<string> axesName)
+        {
+            var controller = GetController(controllerName);
+            if (controller == null)
+            {
+                FormMethod.ShowInfoBox("请选择一个控制卡。");
+                return false;
+            }
+            else
+            {
                 foreach (string axisName in axesName)
                     //添加轴
-                    controller.AddAxis(axisName);
+                    if (!controller.AddAxis(axisName))
+                    {
+                        FormMethod.ShowInfoBox("添加轴失败，检查轴名称。");
+                        return false;
+                    }
             }
             SaveControllerConfig();
             return true;
@@ -252,7 +300,6 @@ namespace CompreDemo
             {
                 Controllers.Remove(controllerName);
                 SaveControllerConfig();
-                //UpdateData?.Invoke(this);
                 return true;
             }
             else
@@ -260,7 +307,6 @@ namespace CompreDemo
                 if (controller.RemoveAxis(axisName))
                 {
                     SaveControllerConfig();
-                    //UpdateData?.Invoke(this);
                     return true;
                 }
                 return false;

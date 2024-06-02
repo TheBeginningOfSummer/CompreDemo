@@ -1,4 +1,5 @@
-﻿using CSharpKit.FileManagement;
+﻿using CompreDemo;
+using CSharpKit.FileManagement;
 using cszmcaux;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -7,7 +8,7 @@ using TrioMotion.TrioPC_NET;
 namespace Services
 {
     #region 轴
-    public abstract class BaseAxis
+    public abstract class BaseAxis : IParameterManager
     {
         #region 参数
         public string? ControllerName { get; set; }
@@ -44,14 +45,14 @@ namespace Services
         public virtual double CurrentSpeed { get; set; }
         #endregion
 
+        public static string RootPath = "Motion";
         public IntPtr Handle;
         //参数存储的路径文件
         public KeyValueManager? AxisConfig;
-        public static string RootPath = "Motion";
 
         public BaseAxis()
         {
-            
+
         }
 
         #region 方法
@@ -123,6 +124,7 @@ namespace Services
         public abstract void SingleRelativeMove(double distance);
 
         public abstract void SingleAbsoluteMove(double coord);
+
         #endregion
     }
 
@@ -437,8 +439,6 @@ namespace Services
         }
         #endregion
 
-        
-
         public ZmotionAxis(IntPtr handle, string axisName, int axisNumber, string controllerName)
         {
             Handle = handle;
@@ -562,7 +562,21 @@ namespace Services
         {
             return JsonManager.ReadJsonString<BaseAxis>($"{RootPath}\\{Name}", $"{axisName}.json");
         }
-        public abstract void Initialize();
+        public void LoadAxes()
+        {
+            foreach (var name in AxesName)
+            {
+                BaseAxis? axis = LoadAxis(name);
+                if (axis != null)
+                    Axes.TryAdd(axis.Name, axis);
+                else
+                    AddAxis(name);
+            }
+        }
+        public virtual void Initialize()
+        {
+            LoadAxes();
+        }
         public abstract bool Connect();
         public abstract void Disconnect();
         public abstract bool IsConnected();
@@ -593,14 +607,15 @@ namespace Services
 
         public TrioMotionControl()
         {
-            //ReinitializeAxes();
+            
         }
 
         #region 设置
         public override void Initialize()
         {
+            base.Initialize();
             //Trio.SetVariable("LIMIT_BUFFERED", 64);//运动缓存区设为64条指令
-            LoadAxis();
+            
         }
 
         public override bool Connect()
@@ -617,18 +632,6 @@ namespace Services
         public override bool IsConnected()
         {
             return Trio.IsOpen(PortId.EthernetREMOTE);
-        }
-
-        public void LoadAxis()
-        {
-            foreach (var name in AxesName)
-            {
-                BaseAxis? axis = LoadAxis(name);
-                if (axis != null)
-                    Axes.TryAdd(axis.Name, axis);
-                else
-                    AddAxis(name);
-            }
         }
 
         public override bool AddAxis(string axisName)
@@ -766,7 +769,7 @@ namespace Services
         #region 设置
         public override void Initialize()
         {
-            LoadAxis();
+            base.Initialize();
         }
 
         public void ECInitialize()
@@ -800,21 +803,10 @@ namespace Services
             return true;
         }
 
-        public void LoadAxis()
-        {
-            foreach (var name in AxesName)
-            {
-                BaseAxis? axis = LoadAxis(name);
-                if (axis != null)
-                    Axes.TryAdd(axis.Name, axis);
-                else
-                    AddAxis(name);
-            }
-        }
-
         public override bool AddAxis(string axisName)
         {
             int axisNumber = 0;
+            if (string.IsNullOrEmpty(axisName)) return false;
             for (int i = 0; i < AxesName.Count + 1; i++)
             {
                 if (!Axes.Values.Select(x => x.Number).Contains(i))

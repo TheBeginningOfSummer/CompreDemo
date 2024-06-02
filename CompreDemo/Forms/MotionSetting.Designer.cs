@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            BTN轴设置 = new Button();
+            BTN轴参数设置 = new Button();
             BTN轴卡设置 = new Button();
             CB轴 = new ComboBox();
             CB轴卡 = new ComboBox();
@@ -51,20 +51,22 @@
             LB轴名称 = new Label();
             LB轴卡类型 = new Label();
             LB轴卡信息 = new Label();
-            BTN轴删除 = new Button();
+            BTN轴卡删除 = new Button();
             BTN轴控制 = new Button();
+            BTN轴删除 = new Button();
+            BTN轴添加 = new Button();
             MS菜单.SuspendLayout();
             SuspendLayout();
             // 
-            // BTN轴设置
+            // BTN轴参数设置
             // 
-            BTN轴设置.Location = new Point(210, 70);
-            BTN轴设置.Name = "BTN轴设置";
-            BTN轴设置.Size = new Size(80, 25);
-            BTN轴设置.TabIndex = 2;
-            BTN轴设置.Text = "轴设置";
-            BTN轴设置.UseVisualStyleBackColor = true;
-            BTN轴设置.Click += BTN轴设置_Click;
+            BTN轴参数设置.Location = new Point(210, 70);
+            BTN轴参数设置.Name = "BTN轴参数设置";
+            BTN轴参数设置.Size = new Size(80, 25);
+            BTN轴参数设置.TabIndex = 2;
+            BTN轴参数设置.Text = "轴参数设置";
+            BTN轴参数设置.UseVisualStyleBackColor = true;
+            BTN轴参数设置.Click += BTN轴参数设置_Click;
             // 
             // BTN轴卡设置
             // 
@@ -244,15 +246,15 @@
             LB轴卡信息.TabIndex = 10;
             LB轴卡信息.Text = "信息";
             // 
-            // BTN轴删除
+            // BTN轴卡删除
             // 
-            BTN轴删除.Location = new Point(296, 40);
-            BTN轴删除.Name = "BTN轴删除";
-            BTN轴删除.Size = new Size(80, 25);
-            BTN轴删除.TabIndex = 11;
-            BTN轴删除.Text = "轴/卡删除";
-            BTN轴删除.UseVisualStyleBackColor = true;
-            BTN轴删除.Click += BTN轴删除_Click;
+            BTN轴卡删除.Location = new Point(296, 40);
+            BTN轴卡删除.Name = "BTN轴卡删除";
+            BTN轴卡删除.Size = new Size(80, 25);
+            BTN轴卡删除.TabIndex = 11;
+            BTN轴卡删除.Text = "轴卡删除";
+            BTN轴卡删除.UseVisualStyleBackColor = true;
+            BTN轴卡删除.Click += BTN轴卡删除_Click;
             // 
             // BTN轴控制
             // 
@@ -260,17 +262,39 @@
             BTN轴控制.Name = "BTN轴控制";
             BTN轴控制.Size = new Size(80, 25);
             BTN轴控制.TabIndex = 12;
-            BTN轴控制.Text = "手动轴控制";
+            BTN轴控制.Text = "轴控制";
             BTN轴控制.UseVisualStyleBackColor = true;
             BTN轴控制.Click += BTN轴控制_Click;
+            // 
+            // BTN轴删除
+            // 
+            BTN轴删除.Location = new Point(296, 130);
+            BTN轴删除.Name = "BTN轴删除";
+            BTN轴删除.Size = new Size(80, 25);
+            BTN轴删除.TabIndex = 14;
+            BTN轴删除.Text = "轴删除";
+            BTN轴删除.UseVisualStyleBackColor = true;
+            BTN轴删除.Click += BTN轴删除_Click;
+            // 
+            // BTN轴添加
+            // 
+            BTN轴添加.Location = new Point(210, 130);
+            BTN轴添加.Name = "BTN轴添加";
+            BTN轴添加.Size = new Size(80, 25);
+            BTN轴添加.TabIndex = 13;
+            BTN轴添加.Text = "轴添加";
+            BTN轴添加.UseVisualStyleBackColor = true;
+            BTN轴添加.Click += BTN轴添加_Click;
             // 
             // MotionSetting
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 451);
-            Controls.Add(BTN轴控制);
             Controls.Add(BTN轴删除);
+            Controls.Add(BTN轴添加);
+            Controls.Add(BTN轴控制);
+            Controls.Add(BTN轴卡删除);
             Controls.Add(LB轴卡信息);
             Controls.Add(LB轴卡类型);
             Controls.Add(LB轴名称);
@@ -278,7 +302,7 @@
             Controls.Add(TB轴名称);
             Controls.Add(TBIP地址);
             Controls.Add(LBIP地址);
-            Controls.Add(BTN轴设置);
+            Controls.Add(BTN轴参数设置);
             Controls.Add(BTN轴卡设置);
             Controls.Add(MS菜单);
             Controls.Add(CB轴);
@@ -302,7 +326,7 @@
         private ComboBox CB轴卡;
         private Label label2;
         private Label label1;
-        private Button BTN轴设置;
+        private Button BTN轴参数设置;
         private Button BTN轴卡设置;
         private ToolStripMenuItem TSM测试;
         private ToolStripMenuItem TSM打开测试窗口;
@@ -314,7 +338,7 @@
         private Label LB轴名称;
         private Label LB轴卡类型;
         private Label LB轴卡信息;
-        private Button BTN轴删除;
+        private Button BTN轴卡删除;
         private Button BTN轴控制;
         private ToolStripTextBox TST测试轴1名称;
         private ToolStripTextBox TST测试轴2名称;
@@ -322,5 +346,7 @@
         private ToolStripMenuItem TSM连接管理;
         private ToolStripMenuItem TSM连接当前卡;
         private ToolStripMenuItem TSM断开当前卡;
+        private Button BTN轴删除;
+        private Button BTN轴添加;
     }
 }

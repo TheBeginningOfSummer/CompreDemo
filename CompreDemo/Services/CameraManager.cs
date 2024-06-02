@@ -1,4 +1,6 @@
-﻿using MvCamCtrl.NET;
+﻿using CompreDemo;
+using CSharpKit.FileManagement;
+using MvCamCtrl.NET;
 using OpenCvSharp;
 using PaddleOCRSharp;
 using System.Diagnostics;
@@ -413,8 +415,10 @@ namespace Services
         }
     }
 
-    public class HuarayCamera
+    public class HuarayCamera : IParameterManager
     {
+        public static string RootPath = "Camera";
+
         public IDevice? Device;
         public string? UserName { get; set; }
         public string? Key { get; set; }
@@ -436,6 +440,11 @@ namespace Services
         public HuarayCamera()
         {
 
+        }
+
+        public void Save()
+        {
+            JsonManager.SaveJsonString($"{RootPath}\\Huaray", $"{UserName}.json", this);
         }
 
         public void GetDevice()
@@ -675,6 +684,7 @@ namespace Services
             }
         }
 
+        
     }
 
     

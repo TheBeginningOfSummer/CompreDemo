@@ -120,6 +120,7 @@ namespace CompreDemo.Forms
             {
                 if (property.PropertyType == typeof(bool)) continue;
                 if (property.Name == "TargetPosition" || property.Name == "CurrentPosition" || property.Name == "CurrentSpeed") continue;
+                if (property.Name == "ControllerName" || property.Name == "Name" || property.Name == "Number") continue;
                 AddSettingBox(new Point(x, y), property.Name, property.GetValue(axis)!.ToString()!, Translate(property.Name));
                 y += yInterval; j++;
                 if (j % row == 0)
@@ -165,15 +166,22 @@ namespace CompreDemo.Forms
         #endregion
 
         #region 设置保存
-        private void AxisSave()
+        private bool AxisSave()
         {
-            if (baseAxis == null) return;
+            if (baseAxis == null)
+            {
+                FormMethod.ShowInfoBox("当前轴为空。");
+                return false;
+            }
             PropertyInfo[] properties = baseAxis.GetType().GetProperties();
             foreach (PropertyInfo property in properties)
             {
                 if (ControlList.TryGetValue(property.Name, out var tb))
-                    baseAxis.SaveAxisConfig(property.Name, double.Parse(tb.Text));
+                    property.SetValue(baseAxis, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
             }
+            baseAxis?.Save();
+            MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return true;
         }
 
         private void CameraSave()
@@ -186,6 +194,24 @@ namespace CompreDemo.Forms
                     property.SetValue(huarayCamera, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
             }
             DeviceManager.Instance.SaveCameraConfig();
+            MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void Save<T>(T? device) where T : IParameterManager
+        {
+            if (device == null)
+            {
+                FormMethod.ShowInfoBox("当前设备为空。");
+                return;
+            }
+            PropertyInfo[] properties = device.GetType().GetProperties();
+            foreach (PropertyInfo property in properties)
+            {
+                if (ControlList.TryGetValue(property.Name, out var tb))
+                    property.SetValue(device, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
+            }
+            device.Save();
+            MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void BTN应用_Click(object sender, EventArgs e)
@@ -226,8 +252,7 @@ namespace CompreDemo.Forms
                 switch (settingType)
                 {
                     case "Axis":
-                        //AxisSave();
-                        baseAxis?.Save();
+                        Save(baseAxis);
                         break;
                     case "Camera":
                         CameraSave();
@@ -235,7 +260,6 @@ namespace CompreDemo.Forms
                     default:
                         break;
                 }
-                MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
