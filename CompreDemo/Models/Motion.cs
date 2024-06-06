@@ -1,11 +1,10 @@
-﻿using CompreDemo;
-using CSharpKit.FileManagement;
+﻿using CSharpKit.FileManagement;
 using cszmcaux;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using TrioMotion.TrioPC_NET;
 
-namespace Services
+namespace Models
 {
     #region 轴
     public abstract class BaseAxis : IParameterManager
@@ -46,7 +45,7 @@ namespace Services
         #endregion
 
         public static string RootPath = "Motion";
-        public IntPtr Handle;
+        public nint Handle;
         //参数存储的路径文件
         public KeyValueManager? AxisConfig;
 
@@ -247,31 +246,31 @@ namespace Services
             {
                 State = "轴状态：正  常";
             }
-            else if (((axis0State >> 2) & 1) == 1)
+            else if ((axis0State >> 2 & 1) == 1)
             {
                 State = "轴状态：与伺服通讯错误！";
             }
-            else if (((axis0State >> 3) & 1) == 1)
+            else if ((axis0State >> 3 & 1) == 1)
             {
                 State = "轴状态：伺服错误！";
             }
-            else if (((axis0State >> 4) & 1) == 1)
+            else if ((axis0State >> 4 & 1) == 1)
             {
                 State = "轴状态：正向硬限位报警！";
             }
-            else if (((axis0State >> 5) & 1) == 1)
+            else if ((axis0State >> 5 & 1) == 1)
             {
                 State = "轴状态：负向硬限位报警！";
             }
-            else if (((axis0State >> 8) & 1) == 1)
+            else if ((axis0State >> 8 & 1) == 1)
             {
                 State = "轴状态：跟随误差超限出错！";
             }
-            else if (((axis0State >> 9) & 1) == 1)
+            else if ((axis0State >> 9 & 1) == 1)
             {
                 State = "轴状态：超过正向软限位报警！";
             }
-            else if (((axis0State >> 10) & 1) == 1)
+            else if ((axis0State >> 10 & 1) == 1)
             {
                 State = "轴状态：超过负向软限位报警！";
             }
@@ -439,7 +438,7 @@ namespace Services
         }
         #endregion
 
-        public ZmotionAxis(IntPtr handle, string axisName, int axisNumber, string controllerName)
+        public ZmotionAxis(nint handle, string axisName, int axisNumber, string controllerName)
         {
             Handle = handle;
             Name = axisName;
@@ -480,7 +479,7 @@ namespace Services
 
         public override void UpdateState()
         {
-            
+
         }
         #endregion
 
@@ -607,7 +606,7 @@ namespace Services
 
         public TrioMotionControl()
         {
-            
+
         }
 
         #region 设置
@@ -615,7 +614,7 @@ namespace Services
         {
             base.Initialize();
             //Trio.SetVariable("LIMIT_BUFFERED", 64);//运动缓存区设为64条指令
-            
+
         }
 
         public override bool Connect()
@@ -706,7 +705,7 @@ namespace Services
             Trio.Execute("ETHERCAT($22,0,0)"); // 将EtherCAT的状态返回到VR(0)中。EtherCAT指令详见Trio BASIC
             Trio.GetVr(0, out state);
             int i = 0;
-            while (state != 3 && (i < 3))// 控制器未连接驱动器，则重新初始化EC
+            while (state != 3 && i < 3)// 控制器未连接驱动器，则重新初始化EC
             {
                 Trio.Execute("ETHERCAT(0,0)"); // 重新初始化EC
                 Thread.Sleep(3000);
@@ -750,7 +749,7 @@ namespace Services
 
     public class ZmotionMotionControl : MotionControl
     {
-        public IntPtr Zmotion;
+        public nint Zmotion;
         public int ErrorCode;
 
         public ZmotionMotionControl(string controllerName, string ip, params string[] axisName)
@@ -763,7 +762,7 @@ namespace Services
 
         public ZmotionMotionControl()
         {
-            
+
         }
 
         #region 设置
@@ -781,7 +780,7 @@ namespace Services
         {
             //链接控制器 
             ErrorCode = Zmcaux.ZAux_OpenEth(IP, out Zmotion);
-            if (Zmotion != (IntPtr)0)
+            if (Zmotion != 0)
             {
                 foreach (var axis in Axes.Values)
                     axis.Handle = Zmotion;
@@ -794,12 +793,12 @@ namespace Services
         public override void Disconnect()
         {
             ErrorCode = Zmcaux.ZAux_Close(Zmotion);
-            Zmotion = (IntPtr)0;
+            Zmotion = 0;
         }
 
         public override bool IsConnected()
         {
-            if (Zmotion == (IntPtr)0) return false;
+            if (Zmotion == 0) return false;
             return true;
         }
 

@@ -1,5 +1,7 @@
-﻿using CompreDemo.Services;
+﻿using CompreDemo.Models;
+using CompreDemo.Services;
 using CSharpKit.FileManagement;
+using Models;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using PaddleOCRSharp;
@@ -28,18 +30,18 @@ namespace CompreDemo
         }
         #endregion
 
-        #region 设备
+        #region 设备配置
         //运动控制卡列表
         public Dictionary<string, MotionControl> Controllers = [];
         //相机列表
         public Dictionary<string, HuarayCamera> Cameras = [];
         //使用的设备
-        public Dictionary<string, string[]> UsingDevices = [];
+        public Dictionary<string, List<UsingDevice>> UsingDevices = [];
+
+        public Dictionary<string, int[]> ROIDic = [];
         //字符识别引擎
         readonly PaddleOCREngine engine;
         #endregion
-
-        public Dictionary<string, int[]> ROIDic = [];
 
         public DeviceManager()
         {
@@ -50,18 +52,10 @@ namespace CompreDemo
         //设备加载
         public void InitializeDevices(string usingDevice)
         {
-            #region 设备配置加载
-            Enumerator.EnumerateDevices();
-            Controllers = LoadConfig<MotionControl>(BaseAxis.RootPath, "Motion.json");
-            foreach (var controller in Controllers.Values)
-                controller.Initialize();//加载轴
-            Cameras = LoadConfig<HuarayCamera>("Cameras", "HuarayCameraList.json");
-            ROIDic = LoadConfig<int[]>("Cameras", "ROIList.json");
-            UsingDevices = LoadConfig<string[]>("Config", "UsingDevices.json");
-            #endregion
+            LoadConfig();
 
             #region 设备初始化
-            if (Controllers!.TryGetValue(UsingDevices[usingDevice][0], out var controller1))
+            if (Controllers!.TryGetValue(UsingDevices[usingDevice][0].Name, out var controller1))
             {
                 if (controller1.Connect())
                 {
@@ -79,7 +73,7 @@ namespace CompreDemo
             {
                 NotifyHandle.Record("控制卡未在设备列表中。", LogType.Error);
             }
-            if (Cameras!.TryGetValue(UsingDevices[usingDevice][3], out var camera1))
+            if (Cameras!.TryGetValue(UsingDevices[usingDevice][1].Name, out var camera1))
             {
                 camera1.OpenCamera();
                 if (camera1.Device == null)
@@ -98,7 +92,6 @@ namespace CompreDemo
             #endregion
         }
 
-        #region 方法
         public string OCR(Bitmap bitmap)
         {
             var oCRResult = engine.DetectText(bitmap);
@@ -113,37 +106,45 @@ namespace CompreDemo
             }
         }
 
-        public static Dictionary<string, T> LoadConfig<T>(string path, string fileName, Dictionary<string, T>? defaultData = null)
+        #region 数据加载保存
+        public void LoadConfig()
         {
-            var dic = JsonManager.ReadJsonString<Dictionary<string, T>>(path, fileName);
-            if (dic == null)
-            {
-                if (defaultData != null)
-                    dic = defaultData;
-                else
-                    dic = [];
-                JsonManager.SaveJsonString(path, fileName, dic);
-            }
-            return dic;
+            #region 设备配置加载
+            Enumerator.EnumerateDevices();
+            Controllers = JsonManager.LoadDic<MotionControl>(BaseAxis.RootPath, "Motion.json");
+            foreach (var controller in Controllers.Values)
+                controller.Initialize();//加载轴
+            Cameras = JsonManager.LoadDic<HuarayCamera>("Cameras", "HuarayCameraList.json");
+            UsingDevices = JsonManager.LoadDic<List<UsingDevice>>("Config", "UsingDevices.json");
+            ROIDic = JsonManager.LoadDic<int[]>("Cameras", "ROIList.json");
+            #endregion
         }
 
-        public static void SaveConfig<T>(string path, string fileName, Dictionary<string, T> data)
+        public void SaveControllers()
         {
-            data ??= [];
-            JsonManager.SaveJsonString(path, fileName, data);
+            string path = BaseAxis.RootPath;
+            Controllers ??= [];
+            JsonManager.SaveJsonString(path, "Motion.json", Controllers);
+        }
+
+        public void SaveCameras()
+        {
+            Cameras ??= [];
+            JsonManager.SaveJsonString("Cameras", "HuarayCameraList.json", Cameras);
+        }
+
+        public void SaveUsingDevices()
+        {
+            JsonManager.SaveDic("Config", "UsingDevices.json", UsingDevices);
+        }
+
+        public void SaveROI()
+        {
+            JsonManager.SaveDic("Cameras", "ROIList.json", ROIDic);
         }
         #endregion
 
         #region 相机
-        /// <summary>
-        /// 保存相机列表
-        /// </summary>
-        public void SaveCameraConfig(string path = "Cameras")
-        {
-            Cameras ??= [];
-            JsonManager.SaveJsonString(path, "HuarayCameraList.json", Cameras);
-        }
-
         public static List<IDeviceInfo> GetCameraList()
         {
             return Enumerator.EnumerateDevices();
@@ -155,7 +156,7 @@ namespace CompreDemo
             huarayCamera.GetDevice();
             if (!Cameras.TryAdd(name, huarayCamera))
                 Cameras[name] = huarayCamera;
-            SaveCameraConfig();
+            SaveCameras();
         }
 
         public void DeleteCamera(string? name)
@@ -165,20 +166,12 @@ namespace CompreDemo
             {
                 huarayCamera.CloseCamera();
                 Cameras.Remove(name);
-                SaveCameraConfig();
+                SaveCameras();
             }
         }
-
         #endregion
 
         #region 控制卡
-        public void SaveControllerConfig()
-        {
-            string path = BaseAxis.RootPath;
-            Controllers ??= [];
-            JsonManager.SaveJsonString(path, "Motion.json", Controllers);
-        }
-
         public MotionControl? GetController(string controllerName)
         {
             if (Controllers.TryGetValue(controllerName, out MotionControl? value))
@@ -253,7 +246,7 @@ namespace CompreDemo
             {
                 if (AddController(controllerName, ip, axesName, type))
                 {
-                    SaveControllerConfig();
+                    SaveControllers();
                     return true;
                 }
             }
@@ -261,7 +254,7 @@ namespace CompreDemo
             {
                 if (!string.IsNullOrEmpty(ip))
                     controller.IP = ip;
-                SaveControllerConfig();
+                SaveControllers();
                 return true;
             }
             return false;
@@ -285,7 +278,7 @@ namespace CompreDemo
                         return false;
                     }
             }
-            SaveControllerConfig();
+            SaveControllers();
             return true;
         }
 
@@ -299,14 +292,14 @@ namespace CompreDemo
             if (string.IsNullOrEmpty(axisName))
             {
                 Controllers.Remove(controllerName);
-                SaveControllerConfig();
+                SaveControllers();
                 return true;
             }
             else
             {
                 if (controller.RemoveAxis(axisName))
                 {
-                    SaveControllerConfig();
+                    SaveControllers();
                     return true;
                 }
                 return false;
@@ -346,8 +339,8 @@ namespace CompreDemo
 
         public void DoWork(string usingDevice, params string[] targetCode)
         {
-            if (!Controllers.TryGetValue(UsingDevices[usingDevice][0], out var motion)) return;
-            if (!Cameras.TryGetValue(UsingDevices[usingDevice][3], out var camera)) return;
+            if (!Controllers.TryGetValue(UsingDevices[usingDevice][0].Name, out var motion)) return;
+            if (!Cameras.TryGetValue(UsingDevices[usingDevice][1].Name, out var camera)) return;
             for (int i = 0; i < 3; i++)
             {
                 //切换表值
@@ -361,7 +354,7 @@ namespace CompreDemo
                 {
                     //图像处理
                     Mat imageMat = BitmapConverter.ToMat(image);
-                    if (ROIDic.TryGetValue(UsingDevices[usingDevice][4], out var roi))
+                    if (ROIDic.TryGetValue(UsingDevices[usingDevice][2].Name, out var roi))
                         imageMat = new(imageMat, new Rect(roi[0], roi[1], roi[2], roi[3]));
                     string code = OCR(imageMat.ToBitmap());
 
@@ -394,11 +387,10 @@ namespace CompreDemo
 
         public void AutoRun1(string usingDevice, int times, double startX, double startY, double intervalX, double targetY)
         {
-            string[] deviceList = UsingDevices[usingDevice];
-            if (deviceList.Length < 3) return;
-            if (!Controllers.TryGetValue(deviceList[0], out var motion)) return;
-            if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
-            if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
+            List<UsingDevice> deviceList = UsingDevices[usingDevice];
+            if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
+            if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
+            if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;
             if (axis1 == null || axis2 == null) return;
             axis1.SingleAbsoluteMove(startX);
             axis2.SingleAbsoluteMove(startY);
@@ -448,11 +440,10 @@ namespace CompreDemo
 
         public void AutoRun2(string usingDevice, int times, double startX, double startY, double intervalX, double targetY)
         {
-            string[] deviceList = UsingDevices[usingDevice];
-            if (deviceList.Length < 3) return;
-            if (!Controllers.TryGetValue(deviceList[0], out var motion)) return;
-            if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
-            if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
+            List<UsingDevice> deviceList = UsingDevices[usingDevice];
+            if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
+            if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
+            if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;
             if (axis1 == null || axis2 == null) return;
             axis1.SingleAbsoluteMove(startX);
             axis2.SingleAbsoluteMove(startY);
@@ -476,12 +467,11 @@ namespace CompreDemo
 
         public void AutoRun3(string usingDevice, int times, double startX, double startY, double length, double intervalX, double intervalY)
         {
-            string[] deviceList = UsingDevices[usingDevice];
-            if (deviceList.Length < 4) return;
-            if (!Controllers.TryGetValue(deviceList[0], out var motion)) return;
-            if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
-            if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
-            if (!Cameras.TryGetValue(deviceList[3], out var camera)) return;
+            List<UsingDevice> deviceList = UsingDevices[usingDevice];
+            if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
+            if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
+            if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;
+            if (!Cameras.TryGetValue(deviceList[1].Name, out var camera)) return;
             if (axis1 == null || axis2 == null) return;
             if (camera.Device == null) return;
             axis1.SingleAbsoluteMove(startX);

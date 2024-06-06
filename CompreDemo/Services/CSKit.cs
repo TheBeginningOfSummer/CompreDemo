@@ -1,6 +1,7 @@
 ﻿using CSharpKit.DataManagement;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO.Ports;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -353,7 +354,7 @@ namespace CSharpKit
                     Array.Reverse(addressBytes);
                     addressBytes.CopyTo(requestMessage, 8);
                 }
-                return ByteArrayToolkit.SpliceBytes(requestMessage, data);
+                return BytesTool.SpliceBytes(requestMessage, data);
             }
             /// <summary>
             /// 写入多个寄存器的报文
@@ -388,7 +389,7 @@ namespace CSharpKit
                     amountBytes.CopyTo(requestMessage, 10);
                 }
                 requestMessage[12] = (byte)data.Length;
-                return ByteArrayToolkit.SpliceBytes(requestMessage, data);
+                return BytesTool.SpliceBytes(requestMessage, data);
             }
             /// <summary>
             /// 解析响应报文
@@ -568,7 +569,7 @@ namespace CSharpKit
                 Array.Reverse(dataLengthBytes);
                 dataLengthBytes.CopyTo(mbap, 4);
                 //返回读取响应
-                return ByteArrayToolkit.SpliceBytes(mbap, responseData);
+                return BytesTool.SpliceBytes(mbap, responseData);
             }
             /// <summary>
             /// 写多个寄存器的返回报文
@@ -632,6 +633,7 @@ namespace CSharpKit
             #endregion
             #endregion
         }
+
         /// <summary>
         /// 静态Fins工具类
         /// </summary>
@@ -723,7 +725,7 @@ namespace CSharpKit
                 string prefixString = "46494E53" + codeLength.ToString("X8") + "00000002" + "00000000" + "80" + "0002" +
                         "00" + remoteAddress.ToString("X2") + "00" + "00" + localAddress.ToString("X2") + "00" +
                         "FF0102" + memoryArea + startAddress.ToString("X4") + "00" + addressLength.ToString("X4");
-                return ByteArrayToolkit.SpliceBytes(DataConverter.HexStringToBytes(prefixString), data);
+                return BytesTool.SpliceBytes(DataConverter.HexStringToBytes(prefixString), data);
             }
             /// <summary>
             /// Fins协议写入PLC指定内存数据
@@ -750,19 +752,17 @@ namespace CSharpKit
                 if (header == null) return false;
                 if (header.Length < 16) return false;
                 if (header[0] != 0x46 || header[1] != 0x49 || header[2] != 0x4E || header[3] != 0x53) return false;
-                finsDataLength = DataConverter.FourBytesToInt(ByteArrayToolkit.CutBytesByLength(header, 4, 4));
+                finsDataLength = DataConverter.FourBytesToInt(BytesTool.CutBytesByLength(header, 4, 4));
                 command = (int)header[11];
                 return true;
             }
         }
-        /// <summary>
-        /// 静态CRC16校验类
-        /// </summary>
+
         public class CRC16
         {
             //High-Order Byte Table
             /* Table of CRC values for high–order byte */
-            static readonly byte[] auchCRCHi = new byte[256]{
+            static readonly byte[] auchCRCHi = [
             0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81,
             0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
             0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01,
@@ -780,7 +780,7 @@ namespace CSharpKit
             0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01,
             0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
             0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81,
-            0x40};
+            0x40];
             //Low-Order Byte Table
             /* Table of CRC values for low–order byte */
             static readonly byte[] auchCRCLo = new byte[256]{
@@ -803,7 +803,7 @@ namespace CSharpKit
             0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42, 0x43, 0x83, 0x41, 0x81, 0x80,
             0x40};
 
-            public static byte[] CRC(byte[] value)
+            public static byte[] CRC16_1(byte[] value)
             {
                 byte uchCRCHi = 0xFF; /* 高CRC字节初始化 */
                 byte uchCRCLo = 0xFF; /* 低CRC字节初始化 */
@@ -834,7 +834,39 @@ namespace CSharpKit
                 btSumValue[btSumValue.Length - 1] = btSum;
                 return btSumValue;
             }
+
+            public static byte[] CRC16_2(byte[] data)
+            {
+                uint crc = 0xffff;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    crc = (crc & 0xff00) + (((crc & 0xff) ^ (data[i])) & 0xff);
+                    for (int kn = 0; kn < 8; kn++)
+                    {
+                        byte kc = (byte)(crc & 1);
+                        crc >>= 1;
+                        if (kc != 0) crc ^= 0xa001;
+                    }
+                }
+                return BitConverter.GetBytes(crc).Take(2).ToArray();
+            }
+
+            public static byte[] CRC16_3(byte[] value)
+            {
+                byte uchCRCHi = 0xFF; /* 高CRC字节初始化 */
+                byte uchCRCLo = 0xFF; /* 低CRC字节初始化 */
+                int uIndex; /* CRC循环中的索引 */
+                for (int i = 0; i < value.Length; i++)
+                {
+                    uIndex = uchCRCLo ^ value[i];
+                    uchCRCLo = (byte)int.Parse((uchCRCHi ^ auchCRCHi[uIndex]).ToString("X"), System.Globalization.NumberStyles.HexNumber);
+                    uchCRCHi = auchCRCLo[uIndex];
+                }
+                byte[] crcValue = [uchCRCLo, uchCRCHi];
+                return crcValue;
+            }
         }
+
         /// <summary>
         /// 字节工具接收类
         /// </summary>
@@ -884,7 +916,7 @@ namespace CSharpKit
                 while (PackageLength > 0)
                 {
                     //检测包头包尾
-                    ByteArrayToolkit.CheckPackage(DataCache, PackageMark, out int head, out int tail);
+                    BytesTool.CheckPackage(DataCache, PackageMark, out int head, out int tail);
                     //无包尾,返回继续拼接
                     if (tail == -1) return;
                     //有包头且在0位置
@@ -932,130 +964,137 @@ namespace CSharpKit
             }
         }
 
-        //public class SerialPortConnection
-        //{
-        //    public readonly SerialPort MySerialPort;//串口对象
-        //    public Action<string> ReceivedString;
-        //    public Action<byte[]> ReceivedByte;
-        //    //public delegate void ShowMsgDelegate(string msg);
-        //    //public ShowMsgDelegate SendMsg;
+        public class SerialPortTool
+        {
+            public readonly SerialPort MySerialPort;//串口对象
+            public Action<string>? ReceivedString;
+            public Action<byte[]>? ReceivedByte;
+            //public delegate void ShowMsgDelegate(string msg);
+            //public ShowMsgDelegate SendMsg;
 
-        //    int receivedByteCount = 0;
-        //    byte reveivedByte;
-        //    readonly byte[] dataCache;
+            int receivedByteCount = 0;
+            byte reveivedByte;
+            readonly byte[] dataCache;
+            readonly static BoundedChannelOptions boundedOptions = new(50) { FullMode = BoundedChannelFullMode.DropOldest };
+            public Channel<byte[]> Data = Channel.CreateBounded<byte[]>(boundedOptions);
 
-        //    public SerialPortConnection(int byteLength = 1024)
-        //    {
-        //        MySerialPort = new SerialPort();
-        //        dataCache = new byte[byteLength];
-        //    }
+            public SerialPortTool(int byteLength = 1024)
+            {
+                MySerialPort = new SerialPort();
+                dataCache = new byte[byteLength];
+            }
 
-        //    private byte[] GetByteArray(byte[] byteArr, int satrt, int length)//截取特定长度的字节数组
-        //    {
-        //        byte[] res = new byte[length];
-        //        if (byteArr != null && byteArr.Length >= length)
-        //        {
-        //            for (int i = 0; i < length; i++)
-        //            {
-        //                res[i] = byteArr[i + satrt];
-        //            }
-        //        }
-        //        return res;
-        //    }
+            private static byte[] GetByteArray(byte[] byteArr, int satrt, int length)//截取特定长度的字节数组
+            {
+                byte[] res = new byte[length];
+                if (byteArr != null && byteArr.Length >= length)
+                {
+                    for (int i = 0; i < length; i++)
+                    {
+                        res[i] = byteArr[i + satrt];
+                    }
+                }
+                return res;
+            }
 
-        //    public bool OpenMySerialPort(int iBaudRate, string portName, int dataBits, Parity iParity, StopBits iStopBits)
-        //    {
-        //        try
-        //        {
-        //            if (MySerialPort.IsOpen)
-        //            {
-        //                MySerialPort.Close();
-        //            }
-        //            MySerialPort.BaudRate = iBaudRate;
-        //            MySerialPort.PortName = portName;
-        //            MySerialPort.DataBits = dataBits;
-        //            MySerialPort.Parity = iParity;
-        //            MySerialPort.StopBits = iStopBits;
+            public bool OpenMySerialPort(int iBaudRate, string portName, int dataBits, Parity iParity, StopBits iStopBits)
+            {
+                try
+                {
+                    if (MySerialPort.IsOpen)
+                    {
+                        MySerialPort.Close();
+                    }
+                    MySerialPort.BaudRate = iBaudRate;
+                    MySerialPort.PortName = portName;
+                    MySerialPort.DataBits = dataBits;
+                    MySerialPort.Parity = iParity;
+                    MySerialPort.StopBits = iStopBits;
 
-        //            MySerialPort.ReceivedBytesThreshold = 1;
-        //            MySerialPort.DataReceived += MySerialPortDataReceived;//绑定接收事件
+                    MySerialPort.ReceivedBytesThreshold = 1;
+                    MySerialPort.DataReceived += MySerialPortDataReceived;//绑定接收事件
 
-        //            MySerialPort.Open();
-        //            return true;
-        //        }
-        //        catch (Exception)
-        //        {
-        //            return false;
-        //        }
-        //    }
+                    MySerialPort.Open();
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
 
-        //    public bool OpenMySerialPort(int iBaudRate, string portName)
-        //    {
-        //        try
-        //        {
-        //            if (MySerialPort.IsOpen)
-        //            {
-        //                MySerialPort.Close();
-        //            }
-        //            MySerialPort.BaudRate = iBaudRate;
-        //            MySerialPort.PortName = portName;
-        //            MySerialPort.DataBits = 8;
-        //            MySerialPort.Parity = Parity.None;
-        //            MySerialPort.StopBits = StopBits.One;
+            public bool OpenMySerialPort(int iBaudRate, string portName)
+            {
+                try
+                {
+                    if (MySerialPort.IsOpen)
+                    {
+                        MySerialPort.Close();
+                    }
+                    MySerialPort.BaudRate = iBaudRate;
+                    MySerialPort.PortName = portName;
+                    MySerialPort.DataBits = 8;
+                    MySerialPort.Parity = Parity.None;
+                    MySerialPort.StopBits = StopBits.One;
 
-        //            MySerialPort.ReceivedBytesThreshold = 1;//缓存中数据多少个时才触发DataReceived事件，默认为1
-        //            MySerialPort.DataReceived += MySerialPortDataReceived;//绑定接收事件
+                    MySerialPort.ReceivedBytesThreshold = 1;//缓存中数据多少个时才触发DataReceived事件，默认为1
+                    MySerialPort.DataReceived += MySerialPortDataReceived;//绑定接收事件
 
-        //            MySerialPort.Open();
-        //            return true;
-        //        }
-        //        catch (Exception)
-        //        {
-        //            return false;
-        //        }
-        //    }
+                    MySerialPort.Open();
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
 
-        //    private void MySerialPortDataReceived(object sender, SerialDataReceivedEventArgs e)//接收事件，接收到数据时触发
-        //    {
-        //        //接收数据
-        //        receivedByteCount = 0;
-        //        while (MySerialPort.BytesToRead > 0)
-        //        {
-        //            reveivedByte = (byte)MySerialPort.ReadByte();
-        //            dataCache[receivedByteCount] = reveivedByte;
-        //            receivedByteCount++;
+            private async void MySerialPortDataReceived(object sender, SerialDataReceivedEventArgs e)//接收事件，接收到数据时触发
+            {
+                //接收数据
+                receivedByteCount = 0;
+                while (MySerialPort.BytesToRead > 0)
+                {
+                    reveivedByte = (byte)MySerialPort.ReadByte();
+                    dataCache[receivedByteCount] = reveivedByte;
+                    receivedByteCount++;
 
-        //            if (receivedByteCount >= 1024)
-        //            {
-        //                receivedByteCount = 0;
-        //                MySerialPort.DiscardInBuffer();
-        //                return;
-        //            }
-        //        }
+                    if (receivedByteCount >= 1024)
+                    {
+                        receivedByteCount = 0;
+                        MySerialPort.DiscardInBuffer();
+                        return;
+                    }
+                }
 
-        //        if (receivedByteCount > 0)
-        //        {
-        //            byte[] b = GetByteArray(dataCache, 0, receivedByteCount);
-        //            ReceivedString?.Invoke(Encoding.ASCII.GetString(b));//通过委托传出接收到的数据
-        //            ReceivedByte?.Invoke(b);
-        //            //SendMsg(Encoding.ASCII.GetString(b));//调用委托，传出接收到的数据
-        //        }
-        //    }
+                if (receivedByteCount > 0)
+                {
+                    byte[] b = GetByteArray(dataCache, 0, receivedByteCount);
+                    await Data.Writer.WriteAsync(b);
+                    ReceivedString?.Invoke(Encoding.ASCII.GetString(b));//通过委托传出接收到的数据
+                    ReceivedByte?.Invoke(b);
+                }
+            }
 
-        //    public void SendMessage(string msg)
-        //    {
-        //        MySerialPort.Write(msg);
-        //    }
+            public void SendMessage(string msg)
+            {
+                MySerialPort.Write(msg);
+            }
 
-        //    public bool CloseMySerialPort()
-        //    {
-        //        if (MySerialPort.IsOpen)
-        //        {
-        //            MySerialPort.Close();
-        //        }
-        //        return true;
-        //    }
-        //}
+            public void SendBytes(byte[] data)
+            {
+                MySerialPort.Write(data, 0, data.Length);
+            }
+
+            public bool CloseMySerialPort()
+            {
+                if (MySerialPort.IsOpen)
+                {
+                    MySerialPort.Close();
+                }
+                return true;
+            }
+        }
     }
 
     namespace DataManagement
@@ -1141,6 +1180,15 @@ namespace CSharpKit
                 return "";
             }
 
+            public static int BytesToInt(byte[] bytes, bool isLittleEndian = false)
+            {
+                if (!isLittleEndian) Array.Reverse(bytes);
+                if (bytes.Length == 1) return bytes[0];
+                if (bytes.Length == 2) return BitConverter.ToInt16(bytes, 0);
+                if (bytes.Length == 4) return BitConverter.ToInt32(bytes, 0);
+                return 0;
+            }
+
             public static int TwoBytesToInt(byte[] bytes, bool isLittleEndian = false)
             {
                 if (isLittleEndian)
@@ -1198,7 +1246,7 @@ namespace CSharpKit
         /// <summary>
         /// 静态字节工具类
         /// </summary>
-        public class ByteArrayToolkit
+        public class BytesTool
         {
             //==========静态函数==========//
             #region 插入与拼接
@@ -1727,6 +1775,46 @@ namespace CSharpKit
             //    JsonData jsonData = JsonMapper.ToObject(File.ReadAllText(path));
             //    return jsonData;
             //}
+
+            public static void SaveDic<T>(string path, string fileName, Dictionary<string, T> data)
+            {
+                data ??= [];
+                JsonManager.SaveJsonString(path, fileName, data);
+            }
+
+            public static Dictionary<string, T> LoadDic<T>(string path, string fileName, Dictionary<string, T>? defaultData = null)
+            {
+                var dic = ReadJsonString<Dictionary<string, T>>(path, fileName);
+                if (dic == null)
+                {
+                    if (defaultData != null)
+                        dic = defaultData;
+                    else
+                        dic = [];
+                    SaveJsonString(path, fileName, dic);
+                }
+                return dic;
+            }
+
+            public static void SaveList<T>(string path, string fileName, List<T> data)
+            {
+                data ??= [];
+                JsonManager.SaveJsonString(path, fileName, data);
+            }
+
+            public static List<T> LoadList<T>(string path, string fileName, List<T>? defaultData = null)
+            {
+                var list = ReadJsonString<List<T>>(path, fileName);
+                if (list == null)
+                {
+                    if (defaultData != null)
+                        list = defaultData;
+                    else
+                        list = [];
+                    SaveJsonString(path, fileName, list);
+                }
+                return list;
+            }
         }
         /// <summary>
         /// 文件配置存储类

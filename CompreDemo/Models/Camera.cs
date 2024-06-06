@@ -1,5 +1,4 @@
-﻿using CompreDemo;
-using CSharpKit.FileManagement;
+﻿using CSharpKit.FileManagement;
 using MvCamCtrl.NET;
 using OpenCvSharp;
 using PaddleOCRSharp;
@@ -9,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using ThridLibray;
 
-namespace Services
+namespace Models
 {
     public class MVSCamera
     {
@@ -62,7 +61,7 @@ namespace Services
 
                 if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)//GIGE
                 {
-                    IntPtr buffer = Marshal.UnsafeAddrOfPinnedArrayElement(device.SpecialInfo.stGigEInfo, 0);
+                    nint buffer = Marshal.UnsafeAddrOfPinnedArrayElement(device.SpecialInfo.stGigEInfo, 0);
                     MyCamera.MV_GIGE_DEVICE_INFO? gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO?)Marshal.PtrToStructure(buffer, typeof(MyCamera.MV_GIGE_DEVICE_INFO));
                     if (gigeInfo?.chUserDefinedName != "")
                     {
@@ -77,7 +76,7 @@ namespace Services
                 }
                 else if (device.nTLayerType == MyCamera.MV_USB_DEVICE)//USB
                 {
-                    IntPtr buffer = Marshal.UnsafeAddrOfPinnedArrayElement(device.SpecialInfo.stUsb3VInfo, 0);
+                    nint buffer = Marshal.UnsafeAddrOfPinnedArrayElement(device.SpecialInfo.stUsb3VInfo, 0);
                     MyCamera.MV_USB3_DEVICE_INFO? usbInfo = (MyCamera.MV_USB3_DEVICE_INFO?)Marshal.PtrToStructure(buffer, typeof(MyCamera.MV_USB3_DEVICE_INFO));
                     if (usbInfo?.chUserDefinedName != "")
                     {
@@ -173,7 +172,7 @@ namespace Services
             //}
         }
 
-        public void Display(IntPtr window)
+        public void Display(nint window)
         {
             // ch:显示 | en:Display
             if (CurrentCamera == null) return;
@@ -275,7 +274,7 @@ namespace Services
                 imageSize = bufferSize * 3 + 2048;
                 imageBytes = new byte[imageSize];
             }
-            IntPtr pData = Marshal.UnsafeAddrOfPinnedArrayElement(bufferForDriver, 0);
+            nint pData = Marshal.UnsafeAddrOfPinnedArrayElement(bufferForDriver, 0);
             MyCamera.MV_FRAME_OUT_INFO_EX stFrameInfo = new MyCamera.MV_FRAME_OUT_INFO_EX();
             // ch:超时获取一帧，超时时间为1秒 | en:Get one frame timeout, timeout is 1 sec
             nRet = CurrentCamera.MV_CC_GetOneFrameTimeout_NET(pData, bufferSize, ref stFrameInfo, 1000);
@@ -302,7 +301,7 @@ namespace Services
             }
             #endregion
             #region 像素格式转换
-            IntPtr pImage = Marshal.UnsafeAddrOfPinnedArrayElement(imageBytes, 0);
+            nint pImage = Marshal.UnsafeAddrOfPinnedArrayElement(imageBytes, 0);
             //MyCamera.MV_SAVE_IMAGE_PARAM_EX stSaveParam = new MyCamera.MV_SAVE_IMAGE_PARAM_EX();
             MyCamera.MV_PIXEL_CONVERT_PARAM stConverPixelParam = new MyCamera.MV_PIXEL_CONVERT_PARAM();
             stConverPixelParam.nWidth = stFrameInfo.nWidth;
@@ -684,8 +683,8 @@ namespace Services
             }
         }
 
-        
+
     }
 
-    
+
 }

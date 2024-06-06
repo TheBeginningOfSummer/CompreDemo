@@ -3,6 +3,7 @@ using OpenCvSharp;
 using Services;
 using ThridLibray;
 using Microsoft.VisualBasic;
+using Models;
 
 namespace CompreDemo.Forms
 {
@@ -96,7 +97,7 @@ namespace CompreDemo.Forms
                         currentROI.CopyTo(roi, 0);
                         if (!device.ROIDic.TryAdd(input, roi))
                             device.ROIDic[input] = roi;
-                        DeviceManager.SaveConfig("Cameras", "ROIList.json", device.ROIDic);
+                        device.SaveROI();
                         UpdateROICB();
                     }
                     window?.Dispose();

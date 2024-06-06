@@ -1,8 +1,8 @@
 ﻿using Services;
 
-namespace CompreDemo
+namespace CompreDemo.Models
 {
-    public class Data
+    public class TestData
     {
         public string Code { get; set; }
         public int Pos { get; set; }
@@ -29,7 +29,7 @@ namespace CompreDemo
 
         public Label Status;
 
-        public Data(string code, int pos, int result)
+        public TestData(string code, int pos, int result)
         {
             Status = new Label
             {
@@ -48,14 +48,14 @@ namespace CompreDemo
 
     public class Tray
     {
-        public Dictionary<int, Data> Tests { get; set; }
+        public Dictionary<int, TestData> Tests { get; set; }
 
         public Tray(int count = 12)
         {
             Tests = [];
             for (int i = 0; i < count; i++)
             {
-                Data data = new(DateTime.Now.ToString("G"), i + 1, 0);
+                TestData data = new(DateTime.Now.ToString("G"), i + 1, 0);
                 Tests.Add(i + 1, data);
             }
         }

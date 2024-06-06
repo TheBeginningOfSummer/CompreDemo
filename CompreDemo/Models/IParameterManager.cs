@@ -1,4 +1,4 @@
-﻿namespace CompreDemo
+﻿namespace Models
 {
     public interface IParameterManager
     {

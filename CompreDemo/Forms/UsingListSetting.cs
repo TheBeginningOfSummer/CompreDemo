@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualBasic;
+﻿using CompreDemo.Models;
+using Microsoft.VisualBasic;
 using Services;
 
 namespace CompreDemo.Forms
@@ -20,9 +21,14 @@ namespace CompreDemo.Forms
                 string name = Interaction.InputBox($"请输入名称：", "提示", "Device1");
                 if (string.IsNullOrEmpty(name)) return;
                 string[] devices = TBText.Text.Trim().Split("\r\n");
-                if (device.UsingDevices.TryAdd(name, devices))
+                List<UsingDevice> usingDevices = [];
+                foreach (string device in devices)
                 {
-                    DeviceManager.SaveConfig("Config", "UsingDevices.json", device.UsingDevices);
+                    usingDevices.Add(new UsingDevice(device));
+                }
+                if (device.UsingDevices.TryAdd(name, usingDevices))
+                {
+                    device.SaveUsingDevices();
                     FormMethod.ShowInfoBox("添加成功。");
                     FormMethod.UpdateListBox(LB使用设备列表, [.. device.UsingDevices.Keys]);
                 }
@@ -39,8 +45,13 @@ namespace CompreDemo.Forms
             {
                 if (LB使用设备列表.SelectedItem == null) return;
                 string[] devices = TBText.Text.Trim().Split("\r\n");
-                device.UsingDevices[LB使用设备列表.SelectedItem.ToString()!] = devices;
-                DeviceManager.SaveConfig("Config", "UsingDevices.json", device.UsingDevices);
+                List<UsingDevice> usingDevices = [];
+                foreach (string device in devices)
+                {
+                    usingDevices.Add(new UsingDevice(device));
+                }
+                device.UsingDevices[LB使用设备列表.SelectedItem.ToString()!] = usingDevices;
+                device.SaveUsingDevices();
                 FormMethod.ShowInfoBox("保存成功。");
             }
             catch (Exception ex)
@@ -55,7 +66,7 @@ namespace CompreDemo.Forms
             {
                 if (LB使用设备列表.SelectedItem == null) return;
                 device.UsingDevices.Remove(LB使用设备列表.SelectedItem.ToString()!);
-                DeviceManager.SaveConfig("Config", "UsingDevices.json", device.UsingDevices);
+                device.SaveUsingDevices();
                 FormMethod.ShowInfoBox("删除成功。");
                 FormMethod.UpdateListBox(LB使用设备列表, [.. device.UsingDevices.Keys]);
             }
@@ -72,7 +83,7 @@ namespace CompreDemo.Forms
                 TBText.Clear();
                 foreach (var item in list)
                 {
-                    TBText.Text += item + Environment.NewLine;
+                    TBText.Text += item.GetDeviceInfo() + Environment.NewLine;
                 }
             }
         }

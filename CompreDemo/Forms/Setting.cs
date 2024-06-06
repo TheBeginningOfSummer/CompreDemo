@@ -1,5 +1,6 @@
 ﻿using CSharpKit.DataManagement;
 using CSharpKit.FileManagement;
+using Models;
 using Services;
 using System.Reflection;
 
@@ -146,6 +147,7 @@ namespace CompreDemo.Forms
             int j = 0;
             foreach (var property in properties)
             {
+                if (property.Name == "ROIList") continue;
                 if (property.Name == "UserName" || property.Name == "Key")
                 {
                     AddLabel(new Point(x, y), $"{Translate(property.Name)}：{property.GetValue(camera)}");
@@ -166,34 +168,20 @@ namespace CompreDemo.Forms
         #endregion
 
         #region 设置保存
-        private bool AxisSave()
+        private void SaveCamera()
         {
-            if (baseAxis == null)
+            if (huarayCamera == null)
             {
-                FormMethod.ShowInfoBox("当前轴为空。");
-                return false;
+                FormMethod.ShowInfoBox("当前设备为空。");
+                return;
             }
-            PropertyInfo[] properties = baseAxis.GetType().GetProperties();
-            foreach (PropertyInfo property in properties)
-            {
-                if (ControlList.TryGetValue(property.Name, out var tb))
-                    property.SetValue(baseAxis, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
-            }
-            baseAxis?.Save();
-            MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return true;
-        }
-
-        private void CameraSave()
-        {
-            if (huarayCamera == null) return;
             PropertyInfo[] properties = huarayCamera.GetType().GetProperties();
             foreach (PropertyInfo property in properties)
             {
                 if (ControlList.TryGetValue(property.Name, out var tb))
                     property.SetValue(huarayCamera, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
             }
-            DeviceManager.Instance.SaveCameraConfig();
+            DeviceManager.Instance.SaveCameras();
             MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -255,7 +243,7 @@ namespace CompreDemo.Forms
                         Save(baseAxis);
                         break;
                     case "Camera":
-                        CameraSave();
+                        SaveCamera();
                         break;
                     default:
                         break;
