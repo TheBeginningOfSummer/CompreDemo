@@ -1,21 +1,21 @@
 ﻿namespace CompreDemo.Models
 {
-    public class UsingDevice
+    public class EquipmentPlan
     {
         public string Name { get; set; } = "default";
 
         public string[] Strings { get; set; } = [];
 
-        //public string DeviceType { get; set; } = "default";
+        public string Type { get; set; } = "default";
 
-        public UsingDevice(string name, string[] strings)
+        public EquipmentPlan(string name, string[] strings, string type)
         {
             Name = name;
             Strings = strings;
-            //DeviceType = deviceType;
+            Type = type;
         }
 
-        public UsingDevice(string info)
+        public EquipmentPlan(string info, string type = "ControlCard")
         {
             if (info.Contains(':'))
             {
@@ -28,9 +28,10 @@
             {
                 Name = info;
             }
+            Type = type;
         }
 
-        public UsingDevice() { }
+        public EquipmentPlan() { }
 
         public string GetDeviceInfo()
         {
@@ -41,11 +42,11 @@
             }
             if (list != "")
             {
-                return $"{Name}:{list.Remove(list.Length - 1)}";
+                return $"[{Type}]{Name}:{list.Remove(list.Length - 1)}";
             }
             else
             {
-                return $"{Name}";
+                return $"[{Type}]{Name}";
             }
         }
 

@@ -173,7 +173,7 @@ namespace CompreDemo.Forms
         {
             var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
             if (currentAxis == null) return;
-            Setting axisSetting = new(currentAxis, "Layout1");
+            Setting axisSetting = new(currentAxis);
             axisSetting.Show();
         }
 

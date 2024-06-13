@@ -10,7 +10,6 @@ namespace CompreDemo.Forms
     {
         #region 控件列表和布局配置
         public readonly Dictionary<string, Control> ControlList = [];
-        public readonly KeyValueManager LayoutConfig;
         #endregion
 
         #region 需要配置的数据
@@ -20,19 +19,17 @@ namespace CompreDemo.Forms
 
         readonly string settingType = "";
 
-        public Setting(BaseAxis axis, string layoutName = "Layout1")
+        public Setting(BaseAxis axis)
         {
             InitializeComponent(); settingType = "Axis";
-            LayoutConfig = new KeyValueManager($"{layoutName}.json", "Config\\Layout");
             baseAxis = axis;
             Text = $"{baseAxis.ControllerName} {baseAxis.Name} 轴号 {baseAxis.Number}";
             InitializeControl(axis);
         }
 
-        public Setting(HuarayCamera camera, string layoutName = "Layout1")
+        public Setting(HuarayCamera camera)
         {
             InitializeComponent(); settingType = "Camera";
-            LayoutConfig = new KeyValueManager($"{layoutName}.json", "Config\\Layout");
             huarayCamera = camera;
             Text = camera.Key;
             InitializeControl(huarayCamera);
@@ -106,12 +103,11 @@ namespace CompreDemo.Forms
 
         public void InitializeControl(BaseAxis axis)
         {
-            if (LayoutConfig == null) return;
-            if (!int.TryParse(LayoutConfig.Load("Row", "12"), out int row)) return;
-            if (!int.TryParse(LayoutConfig.Load("X", "30"), out int xInitial)) return;
-            if (!int.TryParse(LayoutConfig.Load("Y", "30"), out int yInitial)) return;
-            if (!int.TryParse(LayoutConfig.Load("XInterval", "200"), out int xInterval)) return;
-            if (!int.TryParse(LayoutConfig.Load("YInterval", "30"), out int yInterval)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingRow", "12"), out int row)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingX", "30"), out int xInitial)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingY", "30"), out int yInitial)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingXInterval", "200"), out int xInterval)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingYInterval", "30"), out int yInterval)) return;
             int x = xInitial;
             int y = yInitial;
 
@@ -134,12 +130,11 @@ namespace CompreDemo.Forms
 
         public void InitializeControl(HuarayCamera camera)
         {
-            if (LayoutConfig == null) return;
-            if (!int.TryParse(LayoutConfig.Load("Row", "12"), out int row)) return;
-            if (!int.TryParse(LayoutConfig.Load("X", "30"), out int xInitial)) return;
-            if (!int.TryParse(LayoutConfig.Load("Y", "30"), out int yInitial)) return;
-            if (!int.TryParse(LayoutConfig.Load("XInterval", "200"), out int xInterval)) return;
-            if (!int.TryParse(LayoutConfig.Load("YInterval", "30"), out int yInterval)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingRow", "12"), out int row)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingX", "30"), out int xInitial)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingY", "30"), out int yInitial)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingXInterval", "200"), out int xInterval)) return;
+            if (!int.TryParse(DeviceManager.Instance.Config.Load("SettingYInterval", "30"), out int yInterval)) return;
             int x = xInitial;
             int y = yInitial;
 

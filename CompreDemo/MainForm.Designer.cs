@@ -33,7 +33,7 @@
             TSM设置 = new ToolStripMenuItem();
             TSM相机配置 = new ToolStripMenuItem();
             TSM控制卡配置 = new ToolStripMenuItem();
-            TSM列表设置 = new ToolStripMenuItem();
+            TSM设备方案设置 = new ToolStripMenuItem();
             BTN手动模式 = new Button();
             BTN自动模式 = new Button();
             BTN开始测试 = new Button();
@@ -62,7 +62,7 @@
             // TSM设置
             // 
             TSM设置.Alignment = ToolStripItemAlignment.Right;
-            TSM设置.DropDownItems.AddRange(new ToolStripItem[] { TSM相机配置, TSM控制卡配置, TSM列表设置 });
+            TSM设置.DropDownItems.AddRange(new ToolStripItem[] { TSM相机配置, TSM控制卡配置, TSM设备方案设置 });
             TSM设置.Name = "TSM设置";
             TSM设置.Size = new Size(44, 21);
             TSM设置.Text = "设置";
@@ -70,23 +70,23 @@
             // TSM相机配置
             // 
             TSM相机配置.Name = "TSM相机配置";
-            TSM相机配置.Size = new Size(136, 22);
+            TSM相机配置.Size = new Size(180, 22);
             TSM相机配置.Text = "相机配置";
             TSM相机配置.Click += TSM相机配置_Click;
             // 
             // TSM控制卡配置
             // 
             TSM控制卡配置.Name = "TSM控制卡配置";
-            TSM控制卡配置.Size = new Size(136, 22);
+            TSM控制卡配置.Size = new Size(180, 22);
             TSM控制卡配置.Text = "控制卡配置";
             TSM控制卡配置.Click += TSM控制卡配置_Click;
             // 
-            // TSM列表设置
+            // TSM设备方案设置
             // 
-            TSM列表设置.Name = "TSM列表设置";
-            TSM列表设置.Size = new Size(136, 22);
-            TSM列表设置.Text = "列表设置";
-            TSM列表设置.Click += TSM列表设置_Click;
+            TSM设备方案设置.Name = "TSM设备方案设置";
+            TSM设备方案设置.Size = new Size(180, 22);
+            TSM设备方案设置.Text = "设备方案设置";
+            TSM设备方案设置.Click += TSM设备方案设置_Click;
             // 
             // BTN手动模式
             // 
@@ -233,7 +233,7 @@
         private Button BTN重新测试;
         private System.ComponentModel.BackgroundWorker autoRun;
         private TextBox TB信息;
-        private ToolStripMenuItem TSM列表设置;
+        private ToolStripMenuItem TSM设备方案设置;
         private GroupBox GB测试结果;
         private GroupBox GB信息;
         private Button BTN清除;

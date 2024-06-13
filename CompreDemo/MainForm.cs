@@ -1,7 +1,7 @@
 using CompreDemo.Forms;
 using CompreDemo.Models;
-using CompreDemo.Services;
 using Services;
+using static CSharpKit.FileManagement.NotifyRecord;
 
 namespace CompreDemo
 {
@@ -14,18 +14,18 @@ namespace CompreDemo
 
         public MainForm()
         {
-            InitializeComponent();
+            InitializeComponent(); 
             try
             {
-                NotifyHandle.Notify += ShowMessage;
+                Notify += ShowMessage;
                 autoRun.DoWork += AutoRun_DoWork;
-                device.InitializeDevices("Device1");
+                device.InitializeDevices();
                 motionSetting.Initialize();
                 cameraSetting.Initialize();
             }
             catch (Exception e)
             {
-                NotifyHandle.Record($"程序初始化失败。{e.Message}", LogType.Error);
+                Record($"程序初始化失败。{e.Message}", LogType.Error);
             }
         }
 
@@ -62,7 +62,7 @@ namespace CompreDemo
             cameraSetting.ShowDialog();
         }
 
-        private void TSM列表设置_Click(object sender, EventArgs e)
+        private void TSM设备方案设置_Click(object sender, EventArgs e)
         {
             UsingListSetting listSetting = new();
             listSetting.Show();

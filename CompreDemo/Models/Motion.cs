@@ -46,55 +46,21 @@ namespace Models
 
         public static string RootPath = "Motion";
         public nint Handle;
-        //参数存储的路径文件
-        public KeyValueManager? AxisConfig;
-
+        
         public BaseAxis()
         {
 
         }
 
-        #region 方法
+        
+        public BaseAxis? Load(string axisName)
+        {
+            return JsonManager.ReadJsonString<BaseAxis>($"{RootPath}\\{ControllerName}", $"{axisName}.json");
+        }
+
         public void Save()
         {
             JsonManager.SaveJsonString($"{RootPath}\\{ControllerName}", $"{Name}.json", this);
-        }
-
-        /// <summary>
-        /// 从配置文件加载属性值
-        /// </summary>
-        public virtual void LoadAxisConfig()
-        {
-            PropertyInfo[] properties = GetType().GetProperties();
-            foreach (PropertyInfo property in properties)
-            {
-                if (AxisConfig == null) continue;
-                //不加载布尔值
-                if (property.PropertyType == typeof(bool)) continue;
-                //加载属性名对应的值
-                string value = AxisConfig.Load($"{Name} {property.Name}");
-                //类型转换为对应类型
-                if (property.Name == nameof(ForwardJogIn) || property.Name == nameof(ReverseJogIn) || property.Name == nameof(FastJogIn))
-                    property.SetValue(this, Convert.ChangeType(value == "" ? "-1" : value, property.PropertyType));
-                else
-                    property.SetValue(this, Convert.ChangeType(value == "" ? "0" : value, property.PropertyType));
-            }
-        }
-        /// <summary>
-        /// 保存属性值到配置文件
-        /// </summary>
-        /// <typeparam name="T">保存的值类型</typeparam>
-        /// <param name="propertyName">属性名称</param>
-        /// <param name="value">保存的值</param>
-        public virtual void SaveAxisConfig<T>(string propertyName, T value)
-        {
-            if (AxisConfig == null) return;
-            PropertyInfo? property = GetType().GetProperty(propertyName);
-            if (property == null) return;
-            if (property.PropertyType == typeof(bool)) return;
-            if (property.Name == "TargetPosition" || property.Name == "CurrentPosition" || property.Name == "CurrentSpeed") return;
-            property.SetValue(this, value);
-            AxisConfig.Change($"{Name} {property.Name}", property.GetValue(this)!.ToString()!);
         }
 
         public virtual void Initialize()
@@ -110,6 +76,7 @@ namespace Models
 
         public abstract void Disenable();
 
+        #region 运动方法
         public abstract void Stop(int mode);
 
         public abstract void Wait();
@@ -123,7 +90,6 @@ namespace Models
         public abstract void SingleRelativeMove(double distance);
 
         public abstract void SingleAbsoluteMove(double coord);
-
         #endregion
     }
 
@@ -545,7 +511,7 @@ namespace Models
     }
     #endregion
 
-    #region 控制器
+    #region 控制卡
     [JsonDerivedType(typeof(TrioMotionControl), typeDiscriminator: "Trio")]
     [JsonDerivedType(typeof(ZmotionMotionControl), typeDiscriminator: "Zmotion")]
 
@@ -557,6 +523,7 @@ namespace Models
         public List<string> AxesName { get; set; } = [];
 
         public Dictionary<string, BaseAxis> Axes = [];
+
         public BaseAxis? LoadAxis(string axisName)
         {
             return JsonManager.ReadJsonString<BaseAxis>($"{RootPath}\\{Name}", $"{axisName}.json");

@@ -1,5 +1,4 @@
 ﻿using CompreDemo.Models;
-using CompreDemo.Services;
 using CSharpKit.FileManagement;
 using Models;
 using OpenCvSharp;
@@ -7,7 +6,7 @@ using OpenCvSharp.Extensions;
 using PaddleOCRSharp;
 using Services;
 using ThridLibray;
-using LogType = CompreDemo.Services.LogType;
+using LogType = CSharpKit.FileManagement.NotifyRecord.LogType;
 
 namespace CompreDemo
 {
@@ -31,13 +30,14 @@ namespace CompreDemo
         #endregion
 
         #region 设备配置
+        public KeyValueManager Config = new("Config", "Config.json");
         //运动控制卡列表
         public Dictionary<string, MotionControl> Controllers = [];
         //相机列表
         public Dictionary<string, HuarayCamera> Cameras = [];
         //使用的设备
-        public Dictionary<string, List<UsingDevice>> UsingDevices = [];
-
+        public Dictionary<string, List<EquipmentPlan>> UsingDevices = [];
+        //图像处理区域
         public Dictionary<string, int[]> ROIDic = [];
         //字符识别引擎
         readonly PaddleOCREngine engine;
@@ -50,44 +50,64 @@ namespace CompreDemo
         }
 
         //设备加载
-        public void InitializeDevices(string usingDevice)
+        public void InitializeDevices()
         {
             LoadConfig();
-
+            string usingName = Config.Load("CurrentEquipmentPlan", "WorkUnit1");
+            NotifyRecord.Record($"设备方案{usingName}加载。", LogType.Modification);
+            if (UsingDevices.TryGetValue(usingName, out var usingEquipment))
+                NotifyRecord.Record($"设备方案{usingName}加载完成。", LogType.Modification);
+            if (usingEquipment == null)
+            {
+                NotifyRecord.Record($"设备方案{usingName}为空。", LogType.Modification);
+                return;
+            }
             #region 设备初始化
-            if (Controllers!.TryGetValue(UsingDevices[usingDevice][0].Name, out var controller1))
+            foreach (var equipment in usingEquipment)
             {
-                if (controller1.Connect())
+                switch (equipment.Type)
                 {
-                    //轴参数重新初始化
-                    foreach (var item in controller1.Axes.Values)
-                        item.Initialize();//加载轴配置
-                    NotifyHandle.Record("控制卡初始化完成。", LogType.Modification);
+                    case "ControlCard":
+                        if (Controllers!.TryGetValue(equipment.Name, out var controller))
+                        {
+                            if (controller.Connect())
+                            {
+                                //轴参数重新初始化
+                                foreach (var item in controller.Axes.Values)
+                                    item.Initialize();//加载轴配置
+                                NotifyRecord.Record($"控制卡{equipment.Name}初始化完成。", LogType.Modification);
+                            }
+                            else
+                            {
+                                NotifyRecord.Record($"控制卡{equipment.Name}连接失败。", LogType.Error);
+                            }
+                        }
+                        else
+                        {
+                            NotifyRecord.Record($"控制卡{equipment.Name}未在设备列表中。", LogType.Error);
+                        }
+                        break;
+                    case "Camera":
+                        if (Cameras!.TryGetValue(equipment.Name, out var camera))
+                        {
+                            camera.OpenCamera();
+                            if (camera.Device == null)
+                                NotifyRecord.Record($"相机{equipment.Name}打开失败。", LogType.Error);
+                            else
+                            {
+                                camera.Device.TriggerSet.Open(TriggerSourceEnum.Software);
+                                if (camera.StartGrab())
+                                    NotifyRecord.Record($"相机{equipment.Name}开始采集。", LogType.Modification);
+                            }
+                        }
+                        else
+                        {
+                            NotifyRecord.Record($"相机{equipment.Name}未在设备列表中。", LogType.Error);
+                        }
+                        break;
+                    default:
+                        break;
                 }
-                else
-                {
-                    NotifyHandle.Record("控制卡连接失败。", LogType.Error);
-                }
-            }
-            else
-            {
-                NotifyHandle.Record("控制卡未在设备列表中。", LogType.Error);
-            }
-            if (Cameras!.TryGetValue(UsingDevices[usingDevice][1].Name, out var camera1))
-            {
-                camera1.OpenCamera();
-                if (camera1.Device == null)
-                    NotifyHandle.Record("相机打开失败。", LogType.Error);
-                else
-                {
-                    camera1.Device.TriggerSet.Open(TriggerSourceEnum.Software);
-                    if (camera1.StartGrab())
-                        NotifyHandle.Record("相机开始采集。", LogType.Modification);
-                }
-            }
-            else
-            {
-                NotifyHandle.Record("相机未在设备列表中。", LogType.Error);
             }
             #endregion
         }
@@ -115,7 +135,7 @@ namespace CompreDemo
             foreach (var controller in Controllers.Values)
                 controller.Initialize();//加载轴
             Cameras = JsonManager.LoadDic<HuarayCamera>("Cameras", "HuarayCameraList.json");
-            UsingDevices = JsonManager.LoadDic<List<UsingDevice>>("Config", "UsingDevices.json");
+            UsingDevices = JsonManager.LoadDic<List<EquipmentPlan>>("Config", "EquipmentPlan.json");
             ROIDic = JsonManager.LoadDic<int[]>("Cameras", "ROIList.json");
             #endregion
         }
@@ -135,7 +155,7 @@ namespace CompreDemo
 
         public void SaveUsingDevices()
         {
-            JsonManager.SaveDic("Config", "UsingDevices.json", UsingDevices);
+            JsonManager.SaveDic("Config", "EquipmentPlan.json", UsingDevices);
         }
 
         public void SaveROI()
@@ -331,7 +351,6 @@ namespace CompreDemo
             controller.Disconnect();
             MessageBox.Show("断开连接");
         }
-
         #endregion
 
         #region 设备动作
@@ -380,14 +399,14 @@ namespace CompreDemo
                 }
                 else
                 {
-                    NotifyHandle.Record("捕获图像失败。请检查相机。", LogType.Error);
+                    NotifyRecord.Record("捕获图像失败。请检查相机。", LogType.Error);
                 }
             }
         }
 
         public void AutoRun1(string usingDevice, int times, double startX, double startY, double intervalX, double targetY)
         {
-            List<UsingDevice> deviceList = UsingDevices[usingDevice];
+            List<EquipmentPlan> deviceList = UsingDevices[usingDevice];
             if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;
@@ -440,7 +459,7 @@ namespace CompreDemo
 
         public void AutoRun2(string usingDevice, int times, double startX, double startY, double intervalX, double targetY)
         {
-            List<UsingDevice> deviceList = UsingDevices[usingDevice];
+            List<EquipmentPlan> deviceList = UsingDevices[usingDevice];
             if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;
@@ -467,7 +486,7 @@ namespace CompreDemo
 
         public void AutoRun3(string usingDevice, int times, double startX, double startY, double length, double intervalX, double intervalY)
         {
-            List<UsingDevice> deviceList = UsingDevices[usingDevice];
+            List<EquipmentPlan> deviceList = UsingDevices[usingDevice];
             if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;
@@ -481,10 +500,10 @@ namespace CompreDemo
 
             if (camera.Device == null)
             {
-                NotifyHandle.Record("未打开相机。", LogType.Error);
+                NotifyRecord.Record("未打开相机。", LogType.Error);
                 return;
             }
-            NotifyHandle.Record("设备准备完成，测试开始。", LogType.Modification);
+            NotifyRecord.Record("设备准备完成，测试开始。", LogType.Modification);
             Thread.Sleep(1000);
 
             for (int i = 1; i <= times; i++)

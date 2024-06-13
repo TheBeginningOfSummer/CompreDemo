@@ -1825,12 +1825,12 @@ namespace CSharpKit
             public string ConfigurationPath { get; set; }
             public Dictionary<string, string>? KeyValueList;
 
-            public KeyValueManager(string fileName, string path, params string[] keyValues)
+            public KeyValueManager(string path, string fileName, params string[] keyValues)
             {
                 FileName = fileName;
                 ConfigurationPath = path;
                 KeyValueList = JsonManager.ReadJsonString<Dictionary<string, string>>(ConfigurationPath, FileName);
-                
+
                 KeyValueList ??= [];
                 if (keyValues.Length % 2 == 0 && keyValues.Length != 0)
                 {
@@ -1901,22 +1901,58 @@ namespace CSharpKit
                 return KeyValueList[key];
             }
         }
+
+        public class NotifyRecord
+        {
+            public enum LogType
+            {
+                Error, Warning, Modification, Clue
+            }
+
+            public static Action<string>? Notify;
+
+            public NotifyRecord() { }
+
+            public static void Record(string log, LogType logType)
+            {
+                switch (logType)
+                {
+                    case LogType.Error:
+                        FileManager.AppendLog("Log\\Error", "错误记录", log);
+                        Notify?.Invoke(log);
+                        break;
+                    case LogType.Warning:
+                        FileManager.AppendLog("Log\\Warning", "报警记录", log);
+                        Notify?.Invoke(log);
+                        break;
+                    case LogType.Modification:
+                        FileManager.AppendLog("Log\\Modification", "更改记录", log);
+                        Notify?.Invoke(log);
+                        break;
+                }
+            }
+        }
     }
 
     /// <summary>
     /// 计时工具类
     /// </summary>
-    public class TimerToolkit
+    public class TimerKit
     {
+        #region 组件
         public AutoResetEvent CheckTime = new AutoResetEvent(false);
         //时间组件
         public System.Threading.Timer ThreadTimer;
         //计数锁
         private readonly object countLock = new object();
+        #endregion
 
-        //计时时间到
-        public Action? TimesUp;
-        //是否正在计时
+        #region 属性
+        //计时模式， =1为倒计时模式，需设置Timeout时间
+        public int Mode { get; set; }
+        //计时是否暂停
+        public bool IsSuspend { get; set; } = false;
+        //用于指示是否正在计时，无法外部赋值
         public bool IsTiming { get; private set; }
         //计时时间
         public int Timeout { get; set; }
@@ -1928,12 +1964,18 @@ namespace CSharpKit
             set
             {
                 currentCount = value;
-                TimeAutoSet();
-                TimeRunsOut();
+                if (Mode == 1)
+                    TimeRunsOut();
             }
         }
+        #endregion
 
-        public TimerToolkit()
+        //计时
+        public Action<int>? Count;
+        //计时时间到
+        public Action? TimesUp;
+
+        public TimerKit()
         {
             ThreadTimer = new System.Threading.Timer(
                 new TimerCallback(TimerUp), null, System.Threading.Timeout.Infinite, 1000);
@@ -1946,71 +1988,60 @@ namespace CSharpKit
         {
             lock (countLock)
             {
-                CurrentCount += 1;
+                if (!IsSuspend)
+                {
+                    CurrentCount += 1;
+                    Count?.Invoke(CurrentCount);
+                }
             }
         }
 
         public void Start()
         {
             ThreadTimer.Change(0, 1000);
+            IsTiming = true;
         }
 
         public void Stop()
         {
             ThreadTimer.Change(System.Threading.Timeout.Infinite, 1000);
+            IsTiming = false;
         }
-
-        public void ClearCount()
+        /// <summary>
+        /// 计时清零
+        /// </summary>
+        /// <param name="isStop">清零时是否停止计时</param>
+        public void ClearCount(bool isStop = true)
         {
+            if (isStop) Stop();
             lock (countLock)
             {
                 CurrentCount = 0;
+                Count?.Invoke(CurrentCount);
             }
         }
         #endregion
 
-        #region 暂停功能
-        //暂停指定的时间
-        public void Suspend(int timeout)
-        {
-            Timeout = timeout;
-            Stop();
-            ClearCount();
-            Start();
-            CheckTime.WaitOne();
-            Stop();
-            ClearCount();
-        }
-        //超时自动set，在属性变化中调用
-        private void TimeAutoSet()
-        {
-            if (CurrentCount > Timeout)
-            {
-                CheckTime.Set();
-            }
-        }
-        //未超时的手动set，外部调用
-        public void TimerSet()
-        {
-            if (CurrentCount <= Timeout)
-            {
-                CheckTime.Set();
-            }
-        }
-        #endregion
-
-        #region 计时功能
         /// <summary>
-        /// 开始计时
+        /// 开始计时一段时长，时间到后触发一个委托，mode应设置为1
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="timeout">计时时间，单位为秒</param>
         public void Time(int timeout)
         {
+            Mode = 1;
             Timeout = timeout;
-            IsTiming = true;
-            Stop();
             ClearCount();
             Start();
+        }
+        /// <summary>
+        /// 在线程中调用，用于暂停当前线程，经过指定的时间后继续此线程
+        /// </summary>
+        /// <param name="timeout">线程暂停时间，单位为秒</param>
+        public void PauseThread(int timeout)
+        {
+            Time(timeout);
+            CheckTime.WaitOne();
+            ClearCount();
         }
         /// <summary>
         /// 时间耗尽
@@ -2019,32 +2050,13 @@ namespace CSharpKit
         {
             if (CurrentCount > Timeout)
             {
-                Stop();
+                Mode = 0;
                 ClearCount();
                 TimesUp?.Invoke();
-                IsTiming = false;
+                CheckTime.Set();
             }
         }
-        /// <summary>
-        /// 计时时间重置
-        /// </summary>
-        public void TimerReset()
-        {
-            if (IsTiming)
-            {
-                ClearCount();
-            }
-        }
-        /// <summary>
-        /// 计时停止
-        /// </summary>
-        public void Reset()
-        {
-            IsTiming = false;
-            Stop();
-            ClearCount();
-        }
-        #endregion
+        
     }
     /// <summary>
     /// 监视工具
