@@ -1,6 +1,5 @@
 ﻿using CSharpKit.FileManagement;
 using cszmcaux;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using TrioMotion.TrioPC_NET;
 
@@ -45,17 +44,17 @@ namespace Models
         #endregion
 
         public static string RootPath = "Motion";
-        public nint Handle;
-        
+
+        #region 不同控制卡的连接
+        //翠欧
+        public TrioPC AxisTrio = new TrioPC();
+        //正运动
+        public nint AxisZmotion;
+        #endregion
+
         public BaseAxis()
         {
 
-        }
-
-        
-        public BaseAxis? Load(string axisName)
-        {
-            return JsonManager.ReadJsonString<BaseAxis>($"{RootPath}\\{ControllerName}", $"{axisName}.json");
         }
 
         public void Save()
@@ -101,7 +100,7 @@ namespace Models
         {
             get
             {
-                trio.GetAxisParameter(AxisParameter.IDLE, Number, out double movingStatus);
+                AxisTrio.GetAxisParameter(AxisParameter.IDLE, Number, out double movingStatus);
                 if (movingStatus == 0)
                     isMoving = true;
                 else if (movingStatus == -1)
@@ -118,7 +117,7 @@ namespace Models
         {
             get
             {
-                trio.GetAxisVariable("DPOS", Number, out targetPosition); // 获取第numAxis个轴目标位置的参数
+                AxisTrio.GetAxisVariable("DPOS", Number, out targetPosition); // 获取第numAxis个轴目标位置的参数
                 targetPosition = Math.Round(targetPosition, 2); // 保留两位小数
                 return targetPosition;
             }
@@ -129,7 +128,7 @@ namespace Models
         {
             get
             {
-                trio.GetAxisParameter(AxisParameter.MPOS, Number, out currentPosition);
+                AxisTrio.GetAxisParameter(AxisParameter.MPOS, Number, out currentPosition);
                 //trio.GetAxisVariable("MPOS", Number, out currentPosition); // 获取第numAxis个轴的实际位置的参数
                 currentPosition = Math.Round(currentPosition, 2); // 保留两位小数
                 return currentPosition;
@@ -141,7 +140,7 @@ namespace Models
         {
             get
             {
-                trio.GetAxisParameter(AxisParameter.MSPEED, Number, out currentSpeed);
+                AxisTrio.GetAxisParameter(AxisParameter.MSPEED, Number, out currentSpeed);
                 //trio.GetAxisVariable("MSPEED", Number, out currentSpeed); // 获取第numAxis个轴的实际速度
                 currentSpeed = Math.Round(currentSpeed, 2); // 保留两位小数
                 return currentSpeed;
@@ -150,15 +149,15 @@ namespace Models
         }
         #endregion
 
-        readonly TrioPC trio;
-
         public TrioAxis(TrioPC instance, string axisName, int axisNumber, string controllerName)
         {
-            trio = instance;
+            AxisTrio = instance;
             Name = axisName;
             Number = axisNumber;
             ControllerName = controllerName;
         }
+
+        public TrioAxis() { }
 
         #region 设置
         /// <summary>
@@ -166,30 +165,30 @@ namespace Models
         /// </summary>
         public override void Initialize()
         {
-            trio.SetAxisParameter(AxisParameter.ATYPE, Number, Type);
-            trio.SetAxisVariable("UNITS", Number, Units); //脉冲当量
-            trio.SetAxisParameter(AxisParameter.SRAMP, Number, Sramp);
-            trio.SetAxisVariable("SPEED", Number, Speed); // 设置轴速度
-            trio.SetAxisVariable("CREEP", Number, Creep); // 设置爬行速度
-            trio.SetAxisVariable("JOGSPEED", Number, JogSpeed); // 设置Jog速度
-            trio.SetAxisVariable("ACCEL", Number, Accele); // 设置加速度
-            trio.SetAxisVariable("DECEL", Number, Decele); // 设置减速度
-            trio.SetAxisParameter(AxisParameter.FASTDEC, Number, FastDecele);
-            trio.SetAxisVariable("FS_LIMIT", Number, FsLimit); // 设置正向软限位（绝对位置）
-            trio.SetAxisVariable("RS_LIMIT", Number, RsLimit); // 设置反向软限位（绝对位置）
+            AxisTrio.SetAxisParameter(AxisParameter.ATYPE, Number, Type);
+            AxisTrio.SetAxisVariable("UNITS", Number, Units); //脉冲当量
+            AxisTrio.SetAxisParameter(AxisParameter.SRAMP, Number, Sramp);
+            AxisTrio.SetAxisVariable("SPEED", Number, Speed); // 设置轴速度
+            AxisTrio.SetAxisVariable("CREEP", Number, Creep); // 设置爬行速度
+            AxisTrio.SetAxisVariable("JOGSPEED", Number, JogSpeed); // 设置Jog速度
+            AxisTrio.SetAxisVariable("ACCEL", Number, Accele); // 设置加速度
+            AxisTrio.SetAxisVariable("DECEL", Number, Decele); // 设置减速度
+            AxisTrio.SetAxisParameter(AxisParameter.FASTDEC, Number, FastDecele);
+            AxisTrio.SetAxisVariable("FS_LIMIT", Number, FsLimit); // 设置正向软限位（绝对位置）
+            AxisTrio.SetAxisVariable("RS_LIMIT", Number, RsLimit); // 设置反向软限位（绝对位置）
 
-            trio.SetAxisVariable("DATUM_IN", Number, DatumIn); // 回原点输入为输入0
-            trio.SetAxisVariable("FWD_IN", Number, ForwardIn); // 正向软限位输入为输入1
-            trio.SetAxisVariable("REV_IN", Number, ReverseIn); // 正向软限位输入为输入2
-            trio.SetAxisVariable("FWD_JOG", Number, ForwardJogIn); // 设置正向JOG运动的输入
-            trio.SetAxisVariable("REV_JOG", Number, ReverseJogIn); // 设置反向JOG输入
-            trio.SetAxisParameter(AxisParameter.FAST_JOG, Number, FastJogIn);
+            AxisTrio.SetAxisVariable("DATUM_IN", Number, DatumIn); // 回原点输入为输入0
+            AxisTrio.SetAxisVariable("FWD_IN", Number, ForwardIn); // 正向软限位输入为输入1
+            AxisTrio.SetAxisVariable("REV_IN", Number, ReverseIn); // 正向软限位输入为输入2
+            AxisTrio.SetAxisVariable("FWD_JOG", Number, ForwardJogIn); // 设置正向JOG运动的输入
+            AxisTrio.SetAxisVariable("REV_JOG", Number, ReverseJogIn); // 设置反向JOG输入
+            AxisTrio.SetAxisParameter(AxisParameter.FAST_JOG, Number, FastJogIn);
 
-            trio.SetAxisVariable("FE_LIMIT", Number, 20000); // 设置跟随误差极大值
-            trio.SetAxisVariable("FE_RANGE", Number, 10000); // 设置跟随误差报告范围
+            AxisTrio.SetAxisVariable("FE_LIMIT", Number, 20000); // 设置跟随误差极大值
+            AxisTrio.SetAxisVariable("FE_RANGE", Number, 10000); // 设置跟随误差报告范围
             //trio.SetAxisVariable("REP_DIST", Number, 200000000000); // 设置重复距离
-            trio.SetAxisVariable("SERVO", Number, 1); // SERVO=1:进行闭环运动，SERVO=0：开环运动
-            trio.SetAxisVariable("AXIS_ENABLE", Number, 1); // 轴使能（其实初始时，每个轴默认处于使能状态）
+            AxisTrio.SetAxisVariable("SERVO", Number, 1); // SERVO=1:进行闭环运动，SERVO=0：开环运动
+            AxisTrio.SetAxisVariable("AXIS_ENABLE", Number, 1); // 轴使能（其实初始时，每个轴默认处于使能状态）
         }
         /// <summary>
         /// 定义当前位置
@@ -197,8 +196,8 @@ namespace Models
         /// <param name="position">当前位置</param>
         public override void DefPos(double position = 0)
         {
-            trio.Defpos(position, Number);
-            trio.Execute("WAIT UNTIL OFFPOS=0");//Ensures DEFPOS is complete before next line
+            AxisTrio.Defpos(position, Number);
+            AxisTrio.Execute("WAIT UNTIL OFFPOS=0");//Ensures DEFPOS is complete before next line
         }
         /// <summary>
         /// 更新轴状态
@@ -206,7 +205,7 @@ namespace Models
         public override void UpdateState()
         {
             double axisState = -1;
-            trio.GetAxisVariable("AXISSTATUS", Number, out axisState);
+            AxisTrio.GetAxisVariable("AXISSTATUS", Number, out axisState);
             int axis0State = (int)axisState;
             if (axis0State == 0)
             {
@@ -255,8 +254,8 @@ namespace Models
         public override bool Enable()
         {
             double value = -1;
-            trio.SetVariable("WDOG", 1);
-            trio.GetVariable("WDOG", out value);
+            AxisTrio.SetVariable("WDOG", 1);
+            AxisTrio.GetVariable("WDOG", out value);
             if (value == 1) return true;
             else return false;
         }
@@ -265,12 +264,12 @@ namespace Models
         /// </summary>
         public override void Disenable()
         {
-            trio.SetVariable("WDOG", 0);
+            AxisTrio.SetVariable("WDOG", 0);
         }
 
         public override void Stop(int mode = 2)
         {
-            trio.Cancel(mode, Number);// 取消轴0上的运动
+            AxisTrio.Cancel(mode, Number);// 取消轴0上的运动
         }
 
         public override void Wait()
@@ -286,7 +285,7 @@ namespace Models
         public override void Datum(int mode = 3)
         {
             Stop(); // 取消numAxis轴上的运动
-            trio.Datum(mode, Number); // 模式3:以SPEED速度正向回原点; 模式4:以SPEED速度反向回原点 （已经通过SetAxisVariable设置了回原点输入DATUM_IN）
+            AxisTrio.Datum(mode, Number); // 模式3:以SPEED速度正向回原点; 模式4:以SPEED速度反向回原点 （已经通过SetAxisVariable设置了回原点输入DATUM_IN）
         }
 
         public override void Forward()
@@ -294,7 +293,7 @@ namespace Models
             if (Number >= 0)
             {
                 Stop();
-                trio.Forward(Number);
+                AxisTrio.Forward(Number);
             }
         }
 
@@ -303,7 +302,7 @@ namespace Models
             if (Number >= 0)
             {
                 Stop();
-                trio.Reverse(Number);
+                AxisTrio.Reverse(Number);
             }
         }
 
@@ -312,7 +311,7 @@ namespace Models
             if (Number >= 0)
             {
                 double[] dist = new double[] { distance };
-                trio.MoveRel(dist, Number);
+                AxisTrio.MoveRel(dist, Number);
             }
         }
 
@@ -321,7 +320,7 @@ namespace Models
             if (Number >= 0)
             {
                 double[] dist = new double[] { coord };
-                trio.MoveAbs(dist, Number);
+                AxisTrio.MoveAbs(dist, Number);
             }
         }
 
@@ -329,7 +328,7 @@ namespace Models
         {
             if (Number >= 0)
             {
-                trio.MoveRel(dist, axes, Number);
+                AxisTrio.MoveRel(dist, axes, Number);
             }
         }
 
@@ -337,7 +336,7 @@ namespace Models
         {
             if (Number >= 0)
             {
-                trio.MoveAbs(dist, axes, Number);
+                AxisTrio.MoveAbs(dist, axes, Number);
             }
         }
         #endregion
@@ -352,7 +351,7 @@ namespace Models
             get
             {
                 int movingStatus = -1;
-                Zmcaux.ZAux_Direct_GetIfIdle(Handle, Number, ref movingStatus);
+                Zmcaux.ZAux_Direct_GetIfIdle(AxisZmotion, Number, ref movingStatus);
                 if (movingStatus == 0)
                     isMoving = true;
                 else if (movingStatus == -1)
@@ -369,7 +368,7 @@ namespace Models
         {
             get
             {
-                Zmcaux.ZAux_Direct_GetDpos(Handle, Number, ref targetPosition);
+                Zmcaux.ZAux_Direct_GetDpos(AxisZmotion, Number, ref targetPosition);
                 targetPosition = (float)Math.Round(targetPosition / (float)Units, 2); // 保留两位小数
                 if (double.IsNaN(targetPosition)) targetPosition = 0;
                 return targetPosition;
@@ -382,7 +381,7 @@ namespace Models
             get
             {
                 float position = 0;
-                Zmcaux.ZAux_Direct_GetMpos(Handle, Number, ref position);
+                Zmcaux.ZAux_Direct_GetMpos(AxisZmotion, Number, ref position);
                 currentPosition = Math.Round(position / Units, 2); // 保留两位小数
                 if (double.IsNaN(currentPosition)) currentPosition = 0;
                 return currentPosition;
@@ -395,7 +394,7 @@ namespace Models
             get
             {
                 float speed = 0;
-                Zmcaux.ZAux_Direct_GetMspeed(Handle, Number, ref speed);
+                Zmcaux.ZAux_Direct_GetMspeed(AxisZmotion, Number, ref speed);
                 currentSpeed = Math.Round(speed / Units, 2); // 保留两位小数
                 if (double.IsNaN(currentSpeed)) currentSpeed = 0;
                 return currentSpeed;
@@ -406,41 +405,43 @@ namespace Models
 
         public ZmotionAxis(nint handle, string axisName, int axisNumber, string controllerName)
         {
-            Handle = handle;
+            AxisZmotion = handle;
             Name = axisName;
             Number = axisNumber;
             ControllerName = controllerName;
         }
 
+        public ZmotionAxis() { }
+
         #region 设置
         public override void Initialize()
         {
             //Zmcaux.ZAux_Direct_SetInvertStep(Handle, Number, 256 * 100 + 0);
-            Zmcaux.ZAux_Direct_SetAtype(Handle, Number, (int)Type);
-            Zmcaux.ZAux_Direct_SetUnits(Handle, Number, (float)Units);
-            Zmcaux.ZAux_Direct_SetSramp(Handle, Number, (float)Sramp * (float)Units);
-            Zmcaux.ZAux_Direct_SetSpeed(Handle, Number, (float)Speed * (float)Units);
-            Zmcaux.ZAux_Direct_SetCreep(Handle, Number, (float)Creep * (float)Units);
-            Zmcaux.ZAux_Direct_SetJogSpeed(Handle, Number, (float)JogSpeed * (float)Units);
-            Zmcaux.ZAux_Direct_SetAccel(Handle, Number, (float)Accele * (float)Units);
-            Zmcaux.ZAux_Direct_SetDecel(Handle, Number, (float)Decele * (float)Units);
-            Zmcaux.ZAux_Direct_SetFastDec(Handle, Number, (float)FastDecele * (float)Units);
-            Zmcaux.ZAux_Direct_SetFsLimit(Handle, Number, (float)FsLimit * (float)Units);
-            Zmcaux.ZAux_Direct_SetRsLimit(Handle, Number, (float)RsLimit * (float)Units);
+            Zmcaux.ZAux_Direct_SetAtype(AxisZmotion, Number, (int)Type);
+            Zmcaux.ZAux_Direct_SetUnits(AxisZmotion, Number, (float)Units);
+            Zmcaux.ZAux_Direct_SetSramp(AxisZmotion, Number, (float)Sramp * (float)Units);
+            Zmcaux.ZAux_Direct_SetSpeed(AxisZmotion, Number, (float)Speed * (float)Units);
+            Zmcaux.ZAux_Direct_SetCreep(AxisZmotion, Number, (float)Creep * (float)Units);
+            Zmcaux.ZAux_Direct_SetJogSpeed(AxisZmotion, Number, (float)JogSpeed * (float)Units);
+            Zmcaux.ZAux_Direct_SetAccel(AxisZmotion, Number, (float)Accele * (float)Units);
+            Zmcaux.ZAux_Direct_SetDecel(AxisZmotion, Number, (float)Decele * (float)Units);
+            Zmcaux.ZAux_Direct_SetFastDec(AxisZmotion, Number, (float)FastDecele * (float)Units);
+            Zmcaux.ZAux_Direct_SetFsLimit(AxisZmotion, Number, (float)FsLimit * (float)Units);
+            Zmcaux.ZAux_Direct_SetRsLimit(AxisZmotion, Number, (float)RsLimit * (float)Units);
 
-            Zmcaux.ZAux_Direct_SetDatumIn(Handle, Number, (int)DatumIn);
-            Zmcaux.ZAux_Direct_SetFwdIn(Handle, Number, (int)ForwardIn);
-            Zmcaux.ZAux_Direct_SetRevIn(Handle, Number, (int)ReverseIn);
-            Zmcaux.ZAux_Direct_SetFwdJog(Handle, Number, (int)ForwardJogIn);
-            Zmcaux.ZAux_Direct_SetRevJog(Handle, Number, (int)ReverseJogIn);
-            Zmcaux.ZAux_Direct_SetFastJog(Handle, Number, (int)FastJogIn);
+            Zmcaux.ZAux_Direct_SetDatumIn(AxisZmotion, Number, (int)DatumIn);
+            Zmcaux.ZAux_Direct_SetFwdIn(AxisZmotion, Number, (int)ForwardIn);
+            Zmcaux.ZAux_Direct_SetRevIn(AxisZmotion, Number, (int)ReverseIn);
+            Zmcaux.ZAux_Direct_SetFwdJog(AxisZmotion, Number, (int)ForwardJogIn);
+            Zmcaux.ZAux_Direct_SetRevJog(AxisZmotion, Number, (int)ReverseJogIn);
+            Zmcaux.ZAux_Direct_SetFastJog(AxisZmotion, Number, (int)FastJogIn);
 
             //Zmcaux.ZAux_Direct_SetLspeed(Handle, Number, Convert.ToSingle(arg[6]) * Units);
         }
 
         public override void DefPos(double position = 0)
         {
-            Zmcaux.ZAux_Direct_Defpos(Handle, Number, (float)position);
+            Zmcaux.ZAux_Direct_Defpos(AxisZmotion, Number, (float)position);
         }
 
         public override void UpdateState()
@@ -456,7 +457,7 @@ namespace Models
         /// <returns>1为成功-1为失败</returns>
         public override bool Enable()
         {
-            int result = Zmcaux.ZAux_Direct_SetAxisEnable(Handle, Number, 1);
+            int result = Zmcaux.ZAux_Direct_SetAxisEnable(AxisZmotion, Number, 1);
             if (result == 0) return true;
             else return false;
         }
@@ -465,12 +466,12 @@ namespace Models
         /// </summary>
         public override void Disenable()
         {
-            int result = Zmcaux.ZAux_Direct_SetAxisEnable(Handle, Number, 0);
+            int result = Zmcaux.ZAux_Direct_SetAxisEnable(AxisZmotion, Number, 0);
         }
 
         public override void Stop(int mode)
         {
-            Zmcaux.ZAux_Direct_Single_Cancel(Handle, Number, mode);
+            Zmcaux.ZAux_Direct_Single_Cancel(AxisZmotion, Number, mode);
         }
 
         public override void Wait()
@@ -484,27 +485,27 @@ namespace Models
 
         public override void Datum(int mode = 3)
         {
-            Zmcaux.ZAux_Direct_Single_Datum(Handle, Number, mode);
+            Zmcaux.ZAux_Direct_Single_Datum(AxisZmotion, Number, mode);
         }
 
         public override void Forward()
         {
-            Zmcaux.ZAux_Direct_Single_Vmove(Handle, Number, 1);
+            Zmcaux.ZAux_Direct_Single_Vmove(AxisZmotion, Number, 1);
         }
 
         public override void Reverse()
         {
-            Zmcaux.ZAux_Direct_Single_Vmove(Handle, Number, -1);
+            Zmcaux.ZAux_Direct_Single_Vmove(AxisZmotion, Number, -1);
         }
 
         public override void SingleRelativeMove(double distance)
         {
-            Zmcaux.ZAux_Direct_Single_Move(Handle, Number, (float)distance * (float)Units);
+            Zmcaux.ZAux_Direct_Single_Move(AxisZmotion, Number, (float)distance * (float)Units);
         }
 
         public override void SingleAbsoluteMove(double coord)
         {
-            Zmcaux.ZAux_Direct_Single_MoveAbs(Handle, Number, (float)coord * (float)Units);
+            Zmcaux.ZAux_Direct_Single_MoveAbs(AxisZmotion, Number, (float)coord * (float)Units);
         }
 
         #endregion
@@ -524,24 +525,9 @@ namespace Models
 
         public Dictionary<string, BaseAxis> Axes = [];
 
-        public BaseAxis? LoadAxis(string axisName)
-        {
-            return JsonManager.ReadJsonString<BaseAxis>($"{RootPath}\\{Name}", $"{axisName}.json");
-        }
-        public void LoadAxes()
-        {
-            foreach (var name in AxesName)
-            {
-                BaseAxis? axis = LoadAxis(name);
-                if (axis != null)
-                    Axes.TryAdd(axis.Name, axis);
-                else
-                    AddAxis(name);
-            }
-        }
         public virtual void Initialize()
         {
-            LoadAxes();
+            
         }
         public abstract bool Connect();
         public abstract void Disconnect();
@@ -571,15 +557,33 @@ namespace Models
                 AddAxis(axis);
         }
 
-        public TrioMotionControl()
+        public TrioMotionControl() { }
+        
+        #region 设置
+        public TrioAxis? LoadAxis(string axisName)
         {
-
+            return JsonManager.ReadJsonString<TrioAxis?>($"{RootPath}\\{Name}", $"{axisName}.json");
         }
 
-        #region 设置
+        public void LoadAxes()
+        {
+            foreach (var name in AxesName)
+            {
+                TrioAxis? axis = LoadAxis(name);
+                if (axis != null)
+                {
+                    axis.AxisTrio = Trio;
+                    Axes.TryAdd(axis.Name, axis);
+                }
+                else
+                    AddAxis(name);
+            }
+        }
+
         public override void Initialize()
         {
             base.Initialize();
+            LoadAxes();
             //Trio.SetVariable("LIMIT_BUFFERED", 64);//运动缓存区设为64条指令
 
         }
@@ -587,7 +591,13 @@ namespace Models
         public override bool Connect()
         {
             Trio.HostAddress = IP;
-            return Trio.Open(PortType.Ethernet, PortId.EthernetREMOTE);
+            if (Trio.Open(PortType.Ethernet, PortId.EthernetREMOTE))
+            {
+                foreach (var axis in Axes.Values)
+                    axis.AxisTrio = Trio;
+                return true;
+            }
+            return false;
         }
 
         public override void Disconnect()
@@ -727,15 +737,30 @@ namespace Models
                 AddAxis(axis);
         }
 
-        public ZmotionMotionControl()
-        {
-
-        }
+        public ZmotionMotionControl() { }
 
         #region 设置
+        public ZmotionAxis? LoadAxis(string axisName)
+        {
+            return JsonManager.ReadJsonString<ZmotionAxis?>($"{RootPath}\\{Name}", $"{axisName}.json");
+        }
+
+        public void LoadAxes()
+        {
+            foreach (var name in AxesName)
+            {
+                ZmotionAxis? axis = LoadAxis(name);
+                if (axis != null)
+                    Axes.TryAdd(axis.Name, axis);
+                else
+                    AddAxis(name);
+            }
+        }
+
         public override void Initialize()
         {
             base.Initialize();
+            LoadAxes();
         }
 
         public void ECInitialize()
@@ -750,7 +775,7 @@ namespace Models
             if (Zmotion != 0)
             {
                 foreach (var axis in Axes.Values)
-                    axis.Handle = Zmotion;
+                    axis.AxisZmotion = Zmotion;
                 return true;
             }
             else

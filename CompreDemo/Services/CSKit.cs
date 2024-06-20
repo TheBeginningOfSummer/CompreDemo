@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO.Ports;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -1117,6 +1118,28 @@ namespace CSharpKit
                     return Convert.ChangeType(value, nullableConverter.UnderlyingType);
                 }
                 return Convert.ChangeType(value, valueType);
+            }
+        }
+        /// <summary>
+        /// 类工具
+        /// </summary>
+        public class ClassTool
+        {
+            /// <summary>
+            /// 更新类属性
+            /// </summary>
+            /// <typeparam name="T">类类型</typeparam>
+            /// <param name="instance">实例</param>
+            /// <param name="propertyInfo">属性信息，key必须为属性的名称</param>
+            public static void UpdateClassProperty<T>(T instance, Dictionary<string, string> propertyInfo)
+            {
+                if (instance == null) return;
+                PropertyInfo[] properties = instance.GetType().GetProperties();
+                foreach (PropertyInfo property in properties)
+                {
+                    if (propertyInfo.TryGetValue(property.Name, out var properValue))
+                        property.SetValue(instance, ConvertionExtensions.ConvertTo(properValue, property.PropertyType));
+                }
             }
         }
         /// <summary>

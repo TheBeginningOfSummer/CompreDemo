@@ -84,15 +84,14 @@ namespace CompreDemo.Forms
 
         private void TSM打开测试窗口_Click(object sender, EventArgs e)
         {
-            //string[] deviceList = device.UsingDevices[usingDevice];
-            //if (deviceList.Length < 3) return;
-            //if (!device.Controllers.TryGetValue(deviceList[0], out var motion)) return;
-            //if (!motion.Axes.TryGetValue(deviceList[1], out var axis1)) return;
-            //if (!motion.Axes.TryGetValue(deviceList[2], out var axis2)) return;
-            //if (axis1 == null || axis2 == null) return;
+            if (CB轴卡.Text == null) return;
+            if (!device.Controllers.TryGetValue(CB轴卡.Text, out var motion)) return;
+            if (!motion.Axes.TryGetValue(motion.AxesName[0], out var axis1)) return;
+            if (!motion.Axes.TryGetValue(motion.AxesName[1], out var axis2)) return;
+            if (axis1 == null || axis2 == null) return;
 
-            //MotionTest motionTest = new(axis1, axis2);
-            //motionTest.Show();
+            MotionTest motionTest = new(axis1, axis2);
+            motionTest.Show();
         }
 
         private void TSM自动轨迹测试_Click(object sender, EventArgs e)
@@ -137,7 +136,7 @@ namespace CompreDemo.Forms
 
         private void BTN轴卡删除_Click(object sender, EventArgs e)
         {
-            var result = FormMethod.ShowQuestionBox("是否确定删除轴卡数据？");
+            var result = FormKit.ShowQuestionBox("是否确定删除轴卡数据？");
             if (result == DialogResult.Yes)
             {
                 if (device.RemoveInfo(CB轴卡.Text))
@@ -158,7 +157,7 @@ namespace CompreDemo.Forms
 
         private void BTN轴删除_Click(object sender, EventArgs e)
         {
-            var result = FormMethod.ShowQuestionBox("是否确定删除轴数据？");
+            var result = FormKit.ShowQuestionBox("是否确定删除轴数据？");
             if (result == DialogResult.Yes)
             {
                 if (string.IsNullOrEmpty(TB轴名称.Text)) return;

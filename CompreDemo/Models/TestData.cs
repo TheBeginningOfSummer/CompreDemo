@@ -15,15 +15,15 @@ namespace CompreDemo.Models
             {
                 result = value;
                 if (result == 0)
-                    FormMethod.OnThread(Status, () => Status.BackColor = Color.Gray);
+                    FormKit.OnThread(Status, () => Status.BackColor = Color.Gray);
                 else if (result == 1)
-                    FormMethod.OnThread(Status, () => Status.BackColor = Color.Lime);
+                    FormKit.OnThread(Status, () => Status.BackColor = Color.Lime);
                 else if (result == 2)
-                    FormMethod.OnThread(Status, () => Status.BackColor = Color.OrangeRed);
+                    FormKit.OnThread(Status, () => Status.BackColor = Color.OrangeRed);
                 else if (result == 2)
-                    FormMethod.OnThread(Status, () => Status.BackColor = Color.Yellow);
+                    FormKit.OnThread(Status, () => Status.BackColor = Color.Yellow);
                 else
-                    FormMethod.OnThread(Status, () => Status.BackColor = Color.Red);
+                    FormKit.OnThread(Status, () => Status.BackColor = Color.Red);
             }
         }
 

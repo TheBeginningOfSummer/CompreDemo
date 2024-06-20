@@ -29,23 +29,29 @@ namespace CompreDemo.Forms
             while (IsUpdate)
             {
                 Thread.Sleep(100);
-                LB轴信息.Invoke(new Action(() =>
+                try
                 {
-                    message = "";
-                    if (baseAxis == null) return;
-                    baseAxis.UpdateState();
-                    message += $"{baseAxis.State}{Environment.NewLine}";
-                    message += $"当前位置：{baseAxis.CurrentPosition}{Environment.NewLine}";
-                    message += $"当前速度：{baseAxis.CurrentSpeed}{Environment.NewLine}";
-                    LB轴信息.Text = message;
-                }));
+                    LB轴信息.Invoke(new Action(() =>
+                    {
+                        message = "";
+                        if (baseAxis == null) return;
+                        baseAxis.UpdateState();
+                        message += $"{baseAxis.State}{Environment.NewLine}";
+                        message += $"当前位置：{baseAxis.CurrentPosition}{Environment.NewLine}";
+                        message += $"当前速度：{baseAxis.CurrentSpeed}{Environment.NewLine}";
+                        LB轴信息.Text = message;
+                    }));
+                }
+                catch (Exception)
+                {
+                    break;
+                }
             }
         }
 
         private void ManualControl_FormClosing(object sender, FormClosingEventArgs e)
         {
             IsUpdate = false;
-            //axisState?.Wait();
         }
 
         private void ManualControl_FormClosed(object sender, FormClosedEventArgs e)

@@ -36,7 +36,7 @@ namespace CompreDemo
         //相机列表
         public Dictionary<string, HuarayCamera> Cameras = [];
         //使用的设备
-        public Dictionary<string, List<EquipmentPlan>> UsingDevices = [];
+        public Dictionary<string, List<EquipmentPlan>> DevicePlans = [];
         //图像处理区域
         public Dictionary<string, int[]> ROIDic = [];
         //字符识别引擎
@@ -55,7 +55,7 @@ namespace CompreDemo
             LoadConfig();
             string usingName = Config.Load("CurrentEquipmentPlan", "WorkUnit1");
             NotifyRecord.Record($"设备方案{usingName}加载。", LogType.Modification);
-            if (UsingDevices.TryGetValue(usingName, out var usingEquipment))
+            if (DevicePlans.TryGetValue(usingName, out var usingEquipment))
                 NotifyRecord.Record($"设备方案{usingName}加载完成。", LogType.Modification);
             if (usingEquipment == null)
             {
@@ -130,12 +130,12 @@ namespace CompreDemo
         public void LoadConfig()
         {
             #region 设备配置加载
-            Enumerator.EnumerateDevices();
+            //Enumerator.EnumerateDevices();
             Controllers = JsonManager.LoadDic<MotionControl>(BaseAxis.RootPath, "Motion.json");
             foreach (var controller in Controllers.Values)
                 controller.Initialize();//加载轴
             Cameras = JsonManager.LoadDic<HuarayCamera>("Cameras", "HuarayCameraList.json");
-            UsingDevices = JsonManager.LoadDic<List<EquipmentPlan>>("Config", "EquipmentPlan.json");
+            DevicePlans = JsonManager.LoadDic<List<EquipmentPlan>>("Config", "EquipmentPlan.json");
             ROIDic = JsonManager.LoadDic<int[]>("Cameras", "ROIList.json");
             #endregion
         }
@@ -153,9 +153,9 @@ namespace CompreDemo
             JsonManager.SaveJsonString("Cameras", "HuarayCameraList.json", Cameras);
         }
 
-        public void SaveUsingDevices()
+        public void SaveUsingPlan()
         {
-            JsonManager.SaveDic("Config", "EquipmentPlan.json", UsingDevices);
+            JsonManager.SaveDic("Config", "EquipmentPlan.json", DevicePlans);
         }
 
         public void SaveROI()
@@ -219,30 +219,30 @@ namespace CompreDemo
         {
             if (string.IsNullOrEmpty(controllerName))
             {
-                FormMethod.ShowInfoBox("新建轴卡名称不能为空。");
+                FormKit.ShowInfoBox("新建轴卡名称不能为空。");
                 return false;
             }
             if (string.IsNullOrEmpty(ip))
             {
-                FormMethod.ShowInfoBox("新建轴卡IP地址不能为空。");
+                FormKit.ShowInfoBox("新建轴卡IP地址不能为空。");
                 return false;
             }
             if (axesName == null)
             {
-                FormMethod.ShowInfoBox("新建轴卡轴名称不能为空。");
+                FormKit.ShowInfoBox("新建轴卡轴名称不能为空。");
                 return false;
             }
             foreach (var item in axesName)
             {
                 if (string.IsNullOrEmpty(item))
                 {
-                    FormMethod.ShowInfoBox("新建轴卡轴名称不能为空。");
+                    FormKit.ShowInfoBox("新建轴卡轴名称不能为空。");
                     return false;
                 }
             }
             if (string.IsNullOrEmpty(type))
             {
-                FormMethod.ShowInfoBox("请选择新建轴卡类型。");
+                FormKit.ShowInfoBox("请选择新建轴卡类型。");
                 return false;
             }
 
@@ -285,7 +285,7 @@ namespace CompreDemo
             var controller = GetController(controllerName);
             if (controller == null)
             {
-                FormMethod.ShowInfoBox("请选择一个控制卡。");
+                FormKit.ShowInfoBox("请选择一个控制卡。");
                 return false;
             }
             else
@@ -294,7 +294,7 @@ namespace CompreDemo
                     //添加轴
                     if (!controller.AddAxis(axisName))
                     {
-                        FormMethod.ShowInfoBox("添加轴失败，检查轴名称。");
+                        FormKit.ShowInfoBox("添加轴失败，检查轴名称。");
                         return false;
                     }
             }
@@ -358,8 +358,8 @@ namespace CompreDemo
 
         public void DoWork(string usingDevice, params string[] targetCode)
         {
-            if (!Controllers.TryGetValue(UsingDevices[usingDevice][0].Name, out var motion)) return;
-            if (!Cameras.TryGetValue(UsingDevices[usingDevice][1].Name, out var camera)) return;
+            if (!Controllers.TryGetValue(DevicePlans[usingDevice][0].Name, out var motion)) return;
+            if (!Cameras.TryGetValue(DevicePlans[usingDevice][1].Name, out var camera)) return;
             for (int i = 0; i < 3; i++)
             {
                 //切换表值
@@ -373,7 +373,7 @@ namespace CompreDemo
                 {
                     //图像处理
                     Mat imageMat = BitmapConverter.ToMat(image);
-                    if (ROIDic.TryGetValue(UsingDevices[usingDevice][2].Name, out var roi))
+                    if (ROIDic.TryGetValue(DevicePlans[usingDevice][2].Name, out var roi))
                         imageMat = new(imageMat, new Rect(roi[0], roi[1], roi[2], roi[3]));
                     string code = OCR(imageMat.ToBitmap());
 
@@ -406,7 +406,7 @@ namespace CompreDemo
 
         public void AutoRun1(string usingDevice, int times, double startX, double startY, double intervalX, double targetY)
         {
-            List<EquipmentPlan> deviceList = UsingDevices[usingDevice];
+            List<EquipmentPlan> deviceList = DevicePlans[usingDevice];
             if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;
@@ -459,7 +459,7 @@ namespace CompreDemo
 
         public void AutoRun2(string usingDevice, int times, double startX, double startY, double intervalX, double targetY)
         {
-            List<EquipmentPlan> deviceList = UsingDevices[usingDevice];
+            List<EquipmentPlan> deviceList = DevicePlans[usingDevice];
             if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;
@@ -486,7 +486,7 @@ namespace CompreDemo
 
         public void AutoRun3(string usingDevice, int times, double startX, double startY, double length, double intervalX, double intervalY)
         {
-            List<EquipmentPlan> deviceList = UsingDevices[usingDevice];
+            List<EquipmentPlan> deviceList = DevicePlans[usingDevice];
             if (!Controllers.TryGetValue(deviceList[0].Name, out var motion)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[0], out var axis1)) return;
             if (!motion.Axes.TryGetValue(deviceList[0].Strings[1], out var axis2)) return;

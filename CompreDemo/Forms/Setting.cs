@@ -1,5 +1,4 @@
 ﻿using CSharpKit.DataManagement;
-using CSharpKit.FileManagement;
 using Models;
 using Services;
 using System.Reflection;
@@ -163,40 +162,6 @@ namespace CompreDemo.Forms
         #endregion
 
         #region 设置保存
-        private void SaveCamera()
-        {
-            if (huarayCamera == null)
-            {
-                FormMethod.ShowInfoBox("当前设备为空。");
-                return;
-            }
-            PropertyInfo[] properties = huarayCamera.GetType().GetProperties();
-            foreach (PropertyInfo property in properties)
-            {
-                if (ControlList.TryGetValue(property.Name, out var tb))
-                    property.SetValue(huarayCamera, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
-            }
-            DeviceManager.Instance.SaveCameras();
-            MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        private void Save<T>(T? device) where T : IParameterManager
-        {
-            if (device == null)
-            {
-                FormMethod.ShowInfoBox("当前设备为空。");
-                return;
-            }
-            PropertyInfo[] properties = device.GetType().GetProperties();
-            foreach (PropertyInfo property in properties)
-            {
-                if (ControlList.TryGetValue(property.Name, out var tb))
-                    property.SetValue(device, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
-            }
-            device.Save();
-            MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
         private void BTN应用_Click(object sender, EventArgs e)
         {
             try
@@ -204,27 +169,32 @@ namespace CompreDemo.Forms
                 switch (settingType)
                 {
                     case "Axis":
-                        //AxisSave();
+                        if (baseAxis == null)
+                        {
+                            FormKit.ShowInfoBox("当前设备为空。");
+                            return;
+                        }
+                        ClassTool.UpdateClassProperty(baseAxis, ControlList.ToDictionary(entry => entry.Key, entry => entry.Value.Text));
+                        baseAxis.Initialize();
+                        FormKit.ShowInfoBox($"轴{baseAxis.Name}参数应用成功。");
                         break;
                     case "Camera":
-                        if (huarayCamera == null) return;
-                        PropertyInfo[] properties = huarayCamera.GetType().GetProperties();
-                        foreach (PropertyInfo property in properties)
+                        if (huarayCamera == null)
                         {
-                            if (ControlList.TryGetValue(property.Name, out var tb))
-                                property.SetValue(huarayCamera, ConvertionExtensions.ConvertTo(tb.Text, property.PropertyType));
+                            FormKit.ShowInfoBox("当前设备为空。");
+                            return;
                         }
-                        huarayCamera?.SetAllParameter();
-                        //CameraSave();
+                        ClassTool.UpdateClassProperty(huarayCamera, ControlList.ToDictionary(entry => entry.Key, entry => entry.Value.Text));
+                        huarayCamera.SetAllParameter();
+                        FormKit.ShowInfoBox($"相机{huarayCamera.UserName}参数应用成功。");
                         break;
                     default:
                         break;
                 }
-                MessageBox.Show("应用成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                FormKit.ShowErrorBox($"参数应用失败。{ex.Message}");
             }
         }
 
@@ -235,10 +205,24 @@ namespace CompreDemo.Forms
                 switch (settingType)
                 {
                     case "Axis":
-                        Save(baseAxis);
+                        if (baseAxis == null)
+                        {
+                            FormKit.ShowInfoBox("当前设备为空。");
+                            return;
+                        }
+                        ClassTool.UpdateClassProperty(baseAxis, ControlList.ToDictionary(entry => entry.Key, entry => entry.Value.Text));
+                        baseAxis.Save();
+                        FormKit.ShowInfoBox($"轴{baseAxis.Name}参数保存成功。");
                         break;
                     case "Camera":
-                        SaveCamera();
+                        if (huarayCamera == null)
+                        {
+                            FormKit.ShowInfoBox("当前设备为空。");
+                            return;
+                        }
+                        ClassTool.UpdateClassProperty(huarayCamera, ControlList.ToDictionary(entry => entry.Key, entry => entry.Value.Text));
+                        DeviceManager.Instance.SaveCameras();
+                        FormKit.ShowInfoBox($"相机{huarayCamera.UserName}参数保存成功。");
                         break;
                     default:
                         break;
@@ -246,7 +230,7 @@ namespace CompreDemo.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                FormKit.ShowErrorBox($"参数保存失败。{ex.Message}");
             }
         }
         #endregion

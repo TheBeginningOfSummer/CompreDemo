@@ -8,6 +8,11 @@
 
         public string Type { get; set; } = "default";
 
+        public string Description
+        {
+            get { return GetInfo(); }
+        }
+
         public EquipmentPlan(string name, string[] strings, string type)
         {
             Name = name;
@@ -33,7 +38,7 @@
 
         public EquipmentPlan() { }
 
-        public string GetDeviceInfo()
+        public string GetInfo()
         {
             string list = "";
             foreach (var item in Strings)

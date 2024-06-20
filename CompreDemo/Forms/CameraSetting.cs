@@ -142,7 +142,7 @@ namespace CompreDemo.Forms
                 CB相机列表.Items.Add(item.Key);
             if (CB相机列表.Items.Count == 0)
             {
-                FormMethod.ShowInfoBox("无法获取相机，请检查网线。");
+                FormKit.ShowInfoBox("无法获取相机，请检查网线。");
                 return;
             }
             CB相机列表.Text = CB相机列表.Items[0]?.ToString();
@@ -165,7 +165,7 @@ namespace CompreDemo.Forms
         {
             if (item == null)
             {
-                FormMethod.ShowInfoBox(message);
+                FormKit.ShowInfoBox(message);
                 return false;
             }
             else
@@ -252,7 +252,7 @@ namespace CompreDemo.Forms
             {
                 if (string.IsNullOrEmpty(CB相机列表.Text))
                 {
-                    FormMethod.ShowInfoBox("没有选定相机。");
+                    FormKit.ShowInfoBox("没有选定相机。");
                     return;
                 }
                 string input = Interaction.InputBox($"选定设备为[{CB相机列表.Text}]，请输入相机名称：", "提示", "cam1");
@@ -260,12 +260,12 @@ namespace CompreDemo.Forms
                 {
                     device.AddCamera(input, CB相机列表.Text);
                     UpdateCameraLB();
-                    FormMethod.ShowInfoBox("已保存。");
+                    FormKit.ShowInfoBox("已保存。");
                 }
             }
             catch (Exception ex)
             {
-                FormMethod.ShowErrorBox("保存失败。" + ex.Message);
+                FormKit.ShowErrorBox("保存失败。" + ex.Message);
             }
         }
 
@@ -428,7 +428,7 @@ namespace CompreDemo.Forms
             }
             catch (Exception ex)
             {
-                FormMethod.ShowErrorBox("删除失败。" + ex.Message);
+                FormKit.ShowErrorBox("删除失败。" + ex.Message);
             }
         }
 

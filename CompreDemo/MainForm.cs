@@ -31,7 +31,7 @@ namespace CompreDemo
 
         private void ShowMessage(string message)
         {
-            FormMethod.OnThread(TB信息, () => TB信息.Text += $"[{DateTime.Now:G}] {message}{Environment.NewLine}");
+            FormKit.OnThread(TB信息, () => TB信息.Text += $"[{DateTime.Now:G}] {message}{Environment.NewLine}");
         }
 
         private void AutoRun_DoWork(object? sender, System.ComponentModel.DoWorkEventArgs e)
@@ -43,12 +43,12 @@ namespace CompreDemo
         public static void InitializeCurrentTest(int count, Control control, Tray testTray)
         {
             control.Controls.Clear();
-            List<Point> location = FormMethod.SetLocation(30, 30, count, 3, 25, 25);
+            List<Point> location = FormKit.GetLocation(30, 30, count, 3, 25, 25);
             testTray = new(count);
             for (int i = 0; i < testTray.Tests.Count; i++)
             {
-                FormMethod.OnThread(testTray.Tests[i + 1].Status, () => testTray.Tests[i + 1].Status.Location = location[i]);
-                FormMethod.OnThread(control, () => control.Controls.Add(testTray.Tests[i + 1].Status));
+                FormKit.OnThread(testTray.Tests[i + 1].Status, () => testTray.Tests[i + 1].Status.Location = location[i]);
+                FormKit.OnThread(control, () => control.Controls.Add(testTray.Tests[i + 1].Status));
             }
         }
 
@@ -64,7 +64,7 @@ namespace CompreDemo
 
         private void TSM设备方案设置_Click(object sender, EventArgs e)
         {
-            UsingListSetting listSetting = new();
+            UsingPlan listSetting = new();
             listSetting.Show();
         }
 
@@ -75,11 +75,11 @@ namespace CompreDemo
 
         private void BTN开始测试_Click(object sender, EventArgs e)
         {
-            if (FormMethod.ShowQuestionBox("是否开始测试？") == DialogResult.Yes)
+            if (FormKit.ShowQuestionBox("是否开始测试？") == DialogResult.Yes)
             {
                 if (autoRun.IsBusy)
                 {
-                    FormMethod.ShowInfoBox("运行中。");
+                    FormKit.ShowInfoBox("运行中。");
                     return;
                 }
                 autoRun.RunWorkerAsync();
