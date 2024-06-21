@@ -1,6 +1,6 @@
 ﻿namespace CompreDemo.Forms
 {
-    partial class MotionTest
+    partial class Motion_Test
     {
         /// <summary>
         /// Required designer variable.

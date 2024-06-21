@@ -3,7 +3,7 @@ using Models;
 
 namespace CompreDemo.Forms
 {
-    public partial class ManualControl : Form
+    public partial class Motion_Manual : Form
     {
         Task? axisState;
 
@@ -13,7 +13,7 @@ namespace CompreDemo.Forms
 
         public bool IsUpdate = false;
 
-        public ManualControl(BaseAxis axis, string message = "")
+        public Motion_Manual(BaseAxis axis, string message = "")
         {
             InitializeComponent();
 

@@ -1,6 +1,6 @@
 ﻿namespace CompreDemo.Forms
 {
-    partial class CameraSetting
+    partial class Setting_Camera
     {
         /// <summary>
         /// Required designer variable.
@@ -52,7 +52,6 @@
             BTN捕获图片 = new Button();
             BTN目标区域 = new Button();
             CB目标区域 = new ComboBox();
-            BTN测试 = new Button();
             MS相机.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PB图片).BeginInit();
             CMS相机列表.SuspendLayout();
@@ -77,14 +76,14 @@
             // TSM添加相机
             // 
             TSM添加相机.Name = "TSM添加相机";
-            TSM添加相机.Size = new Size(180, 22);
+            TSM添加相机.Size = new Size(124, 22);
             TSM添加相机.Text = "添加相机";
             TSM添加相机.Click += TSM添加相机_Click;
             // 
             // TSM选择区域
             // 
             TSM选择区域.Name = "TSM选择区域";
-            TSM选择区域.Size = new Size(180, 22);
+            TSM选择区域.Size = new Size(124, 22);
             TSM选择区域.Text = "选择区域";
             TSM选择区域.Click += TSM选择区域_Click;
             // 
@@ -98,21 +97,21 @@
             // TSM截取区域
             // 
             TSM截取区域.Name = "TSM截取区域";
-            TSM截取区域.Size = new Size(180, 22);
+            TSM截取区域.Size = new Size(124, 22);
             TSM截取区域.Text = "截取区域";
             TSM截取区域.Click += TSM截取区域_Click;
             // 
             // TSM打开图片
             // 
             TSM打开图片.Name = "TSM打开图片";
-            TSM打开图片.Size = new Size(180, 22);
+            TSM打开图片.Size = new Size(124, 22);
             TSM打开图片.Text = "打开图片";
             TSM打开图片.Click += TSM打开图片_Click;
             // 
             // TSM识别
             // 
             TSM识别.Name = "TSM识别";
-            TSM识别.Size = new Size(180, 22);
+            TSM识别.Size = new Size(124, 22);
             TSM识别.Text = "识别";
             TSM识别.Click += TSM识别_Click;
             // 
@@ -254,23 +253,11 @@
             CB目标区域.TabIndex = 11;
             CB目标区域.SelectedIndexChanged += CB目标区域_SelectedIndexChanged;
             // 
-            // BTN测试
-            // 
-            BTN测试.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            BTN测试.Location = new Point(688, 151);
-            BTN测试.Name = "BTN测试";
-            BTN测试.Size = new Size(100, 25);
-            BTN测试.TabIndex = 12;
-            BTN测试.Text = "测试";
-            BTN测试.UseVisualStyleBackColor = true;
-            BTN测试.Click += BTN测试_Click;
-            // 
-            // CameraSetting
+            // Setting_Camera
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(BTN测试);
             Controls.Add(CB目标区域);
             Controls.Add(BTN目标区域);
             Controls.Add(BTN捕获图片);
@@ -281,7 +268,7 @@
             Controls.Add(CB相机列表);
             Controls.Add(MS相机);
             MainMenuStrip = MS相机;
-            Name = "CameraSetting";
+            Name = "Setting_Camera";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "相机设置";
             FormClosing += CameraSetting_FormClosing;
@@ -318,6 +305,5 @@
         private ToolStripMenuItem TSM添加相机;
         private Button BTN目标区域;
         private ComboBox CB目标区域;
-        private Button BTN测试;
     }
 }

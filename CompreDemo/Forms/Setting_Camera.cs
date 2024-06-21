@@ -7,7 +7,7 @@ using Models;
 
 namespace CompreDemo.Forms
 {
-    public partial class CameraSetting : Form
+    public partial class Setting_Camera : Form
     {
         readonly OpenFileDialog ofd = new();
         readonly DeviceManager device = DeviceManager.Instance;
@@ -45,7 +45,7 @@ namespace CompreDemo.Forms
         int[] currentROI = [0, 0, 10, 10];
         #endregion
 
-        public CameraSetting()
+        public Setting_Camera()
         {
             InitializeComponent();
             MouseCallbackEvent = new MouseCallback(MouseDraw);
@@ -525,10 +525,6 @@ namespace CompreDemo.Forms
             }
         }
 
-        private void BTN测试_Click(object sender, EventArgs e)
-        {
-            
-        }
 
         
     }

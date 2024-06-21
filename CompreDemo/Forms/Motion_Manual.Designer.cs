@@ -1,6 +1,6 @@
 ﻿namespace CompreDemo.Forms
 {
-    partial class ManualControl
+    partial class Motion_Manual
     {
         /// <summary>
         /// Required designer variable.

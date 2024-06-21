@@ -8,8 +8,8 @@ namespace CompreDemo
     public partial class MainForm : Form
     {
         readonly DeviceManager device = DeviceManager.Instance;
-        readonly MotionSetting motionSetting = new();
-        readonly CameraSetting cameraSetting = new();
+        readonly Setting_Motion motionSetting = new();
+        readonly Setting_Camera cameraSetting = new();
         Tray currentTest = new();
 
         public MainForm()

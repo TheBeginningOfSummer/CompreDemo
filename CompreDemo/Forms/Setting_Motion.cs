@@ -4,13 +4,13 @@ using Services;
 
 namespace CompreDemo.Forms
 {
-    public partial class MotionSetting : Form
+    public partial class Setting_Motion : Form
     {
         readonly DeviceManager device = DeviceManager.Instance;
         Task? testMotion;
         CancellationTokenSource cancellation = new();
 
-        public MotionSetting()
+        public Setting_Motion()
         {
             InitializeComponent();
         }
@@ -90,7 +90,7 @@ namespace CompreDemo.Forms
             if (!motion.Axes.TryGetValue(motion.AxesName[1], out var axis2)) return;
             if (axis1 == null || axis2 == null) return;
 
-            MotionTest motionTest = new(axis1, axis2);
+            Motion_Test motionTest = new(axis1, axis2);
             motionTest.Show();
         }
 
@@ -180,7 +180,7 @@ namespace CompreDemo.Forms
         {
             var currentAxis = device.GetAxis(CB轴卡.Text, CB轴.Text);
             if (currentAxis == null) return;
-            ManualControl manualControl = new(currentAxis);
+            Motion_Manual manualControl = new(currentAxis);
             manualControl.Show();
         }
 

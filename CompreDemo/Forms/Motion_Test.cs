@@ -3,7 +3,7 @@ using Models;
 
 namespace CompreDemo.Forms
 {
-    public partial class MotionTest : Form
+    public partial class Motion_Test : Form
     {
         #region 笔刷
         readonly Graphics graphics;
@@ -15,7 +15,7 @@ namespace CompreDemo.Forms
         bool isDraw = true;
         Task? drawing;
 
-        public MotionTest(BaseAxis axis1, BaseAxis axis2)
+        public Motion_Test(BaseAxis axis1, BaseAxis axis2)
         {
             InitializeComponent();
             graphics = CreateGraphics();

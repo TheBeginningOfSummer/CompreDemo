@@ -1,6 +1,6 @@
 ﻿namespace CompreDemo.Forms
 {
-    partial class MotionSetting
+    partial class Setting_Motion
     {
         /// <summary>
         /// Required designer variable.
@@ -151,7 +151,7 @@
             // TSM打开测试窗口
             // 
             TSM打开测试窗口.Name = "TSM打开测试窗口";
-            TSM打开测试窗口.Size = new Size(180, 22);
+            TSM打开测试窗口.Size = new Size(148, 22);
             TSM打开测试窗口.Text = "打开测试窗口";
             TSM打开测试窗口.Click += TSM打开测试窗口_Click;
             // 
@@ -159,7 +159,7 @@
             // 
             TSM自动轨迹测试.DropDownItems.AddRange(new ToolStripItem[] { TST轨迹 });
             TSM自动轨迹测试.Name = "TSM自动轨迹测试";
-            TSM自动轨迹测试.Size = new Size(180, 22);
+            TSM自动轨迹测试.Size = new Size(148, 22);
             TSM自动轨迹测试.Text = "自动轨迹测试";
             TSM自动轨迹测试.Click += TSM自动轨迹测试_Click;
             // 
@@ -269,7 +269,7 @@
             BTN轴添加.UseVisualStyleBackColor = true;
             BTN轴添加.Click += BTN轴添加_Click;
             // 
-            // MotionSetting
+            // Setting_Motion
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -293,7 +293,7 @@
             Controls.Add(CB轴卡);
             Controls.Add(label2);
             MainMenuStrip = MS菜单;
-            Name = "MotionSetting";
+            Name = "Setting_Motion";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "MotionSetting";
             FormClosing += MotionSetting_FormClosing;
