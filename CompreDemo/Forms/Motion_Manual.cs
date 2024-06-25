@@ -16,7 +16,7 @@ namespace CompreDemo.Forms
         public Motion_Manual(BaseAxis axis, string message = "")
         {
             InitializeComponent();
-
+            
             baseAxis = axis;
             Text = $"{baseAxis.ControllerName} {baseAxis.Name} 轴号 {baseAxis.Number}";
             Processkit.StartTask(ref axisState, UpdateAxisState);

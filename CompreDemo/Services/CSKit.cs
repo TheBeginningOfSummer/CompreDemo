@@ -1121,6 +1121,13 @@ namespace CSharpKit
             }
         }
         /// <summary>
+        /// 用于数据包装
+        /// </summary>
+        public class StringWrapper(string value)
+        {
+            public string Value { get; set; } = value;
+        }
+        /// <summary>
         /// 类工具
         /// </summary>
         public class ClassTool

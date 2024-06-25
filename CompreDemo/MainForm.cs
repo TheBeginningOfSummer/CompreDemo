@@ -1,6 +1,7 @@
 using CompreDemo.Forms;
 using CompreDemo.Models;
 using Services;
+using ViewModels;
 using static CSharpKit.FileManagement.NotifyRecord;
 
 namespace CompreDemo
@@ -8,25 +9,30 @@ namespace CompreDemo
     public partial class MainForm : Form
     {
         readonly DeviceManager device = DeviceManager.Instance;
-        readonly Setting_Motion motionSetting = new();
-        readonly Setting_Camera cameraSetting = new();
+        readonly Setting_Motion motionSetting;
+        readonly Setting_Camera cameraSetting;
+        readonly ViewModel viewModel;
         Tray currentTest = new();
 
         public MainForm()
         {
-            InitializeComponent(); 
+            InitializeComponent();
+
             try
             {
                 Notify += ShowMessage;
                 autoRun.DoWork += AutoRun_DoWork;
                 device.InitializeDevices();
-                motionSetting.Initialize();
-                cameraSetting.Initialize();
             }
             catch (Exception e)
             {
                 Record($"≥Ã–Ú≥ı ºªØ ß∞‹°£{e.Message}", LogType.Error);
             }
+
+            motionSetting = new();
+            cameraSetting = new();
+            viewModel = new(motionSetting, cameraSetting);
+            
         }
 
         private void ShowMessage(string message)

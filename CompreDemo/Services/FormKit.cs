@@ -83,6 +83,13 @@ namespace Services
             lb.DisplayMember = display;
             lb.ValueMember = value;
         }
+
+        public static void ListBinding<T>(ComboBox cb, BindingList<T> list, string display = "", string value = "")
+        {
+            cb.DataSource = list;
+            cb.DisplayMember = display;
+            cb.ValueMember = value;
+        }
         #endregion
     }
 

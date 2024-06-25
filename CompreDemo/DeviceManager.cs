@@ -339,7 +339,7 @@ namespace CompreDemo
             }
             else
             {
-                MessageBox.Show("连接失败");
+                FormKit.ShowInfoBox("连接失败。");
             }
             return false;
         }
@@ -349,7 +349,7 @@ namespace CompreDemo
             var controller = GetController(controllerName);
             if (controller == null) return;
             controller.Disconnect();
-            MessageBox.Show("断开连接");
+            FormKit.ShowInfoBox("断开连接。");
         }
         #endregion
 

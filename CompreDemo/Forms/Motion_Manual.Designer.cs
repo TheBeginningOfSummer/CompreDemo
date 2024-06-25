@@ -144,7 +144,7 @@
             LB轴信息.TabIndex = 10;
             LB轴信息.Text = "轴信息";
             // 
-            // ManualControl
+            // Motion_Manual
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -161,7 +161,7 @@
             Controls.Add(LB目标位置);
             Controls.Add(MS运动控制);
             MainMenuStrip = MS运动控制;
-            Name = "ManualControl";
+            Name = "Motion_Manual";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "ManualControl";
             FormClosing += ManualControl_FormClosing;

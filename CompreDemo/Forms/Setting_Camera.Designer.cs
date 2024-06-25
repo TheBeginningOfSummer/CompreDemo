@@ -43,7 +43,7 @@
             PB图片 = new PictureBox();
             LB相机列表 = new ListBox();
             CMS相机列表 = new ContextMenuStrip(components);
-            TSM连接断开 = new ToolStripMenuItem();
+            TSM连接 = new ToolStripMenuItem();
             TSM断开 = new ToolStripMenuItem();
             TSM开始采集 = new ToolStripMenuItem();
             TSM停止采集 = new ToolStripMenuItem();
@@ -78,14 +78,12 @@
             TSM添加相机.Name = "TSM添加相机";
             TSM添加相机.Size = new Size(124, 22);
             TSM添加相机.Text = "添加相机";
-            TSM添加相机.Click += TSM添加相机_Click;
             // 
             // TSM选择区域
             // 
             TSM选择区域.Name = "TSM选择区域";
             TSM选择区域.Size = new Size(124, 22);
             TSM选择区域.Text = "选择区域";
-            TSM选择区域.Click += TSM选择区域_Click;
             // 
             // TSM测试
             // 
@@ -99,21 +97,18 @@
             TSM截取区域.Name = "TSM截取区域";
             TSM截取区域.Size = new Size(124, 22);
             TSM截取区域.Text = "截取区域";
-            TSM截取区域.Click += TSM截取区域_Click;
             // 
             // TSM打开图片
             // 
             TSM打开图片.Name = "TSM打开图片";
             TSM打开图片.Size = new Size(124, 22);
             TSM打开图片.Text = "打开图片";
-            TSM打开图片.Click += TSM打开图片_Click;
             // 
             // TSM识别
             // 
             TSM识别.Name = "TSM识别";
             TSM识别.Size = new Size(124, 22);
             TSM识别.Text = "识别";
-            TSM识别.Click += TSM识别_Click;
             // 
             // CB相机列表
             // 
@@ -133,7 +128,6 @@
             BTN查找设备.TabIndex = 2;
             BTN查找设备.Text = "查找设备";
             BTN查找设备.UseVisualStyleBackColor = true;
-            BTN查找设备.Click += BTN查找设备_Click;
             // 
             // TB信息
             // 
@@ -154,10 +148,6 @@
             PB图片.SizeMode = PictureBoxSizeMode.Zoom;
             PB图片.TabIndex = 4;
             PB图片.TabStop = false;
-            PB图片.MouseDown += PB图片_MouseDown;
-            PB图片.MouseMove += PB图片_MouseMove;
-            PB图片.MouseUp += PB图片_MouseUp;
-            PB图片.Resize += PB图片_Resize;
             // 
             // LB相机列表
             // 
@@ -174,52 +164,46 @@
             // 
             // CMS相机列表
             // 
-            CMS相机列表.Items.AddRange(new ToolStripItem[] { TSM连接断开, TSM断开, TSM开始采集, TSM停止采集, TSM参数设置, TSM删除 });
+            CMS相机列表.Items.AddRange(new ToolStripItem[] { TSM连接, TSM断开, TSM开始采集, TSM停止采集, TSM参数设置, TSM删除 });
             CMS相机列表.Name = "CMS相机列表";
             CMS相机列表.Size = new Size(125, 136);
             CMS相机列表.Text = "相机列表";
             // 
-            // TSM连接断开
+            // TSM连接
             // 
-            TSM连接断开.Name = "TSM连接断开";
-            TSM连接断开.Size = new Size(124, 22);
-            TSM连接断开.Text = "连接";
-            TSM连接断开.Click += TSM连接_Click;
+            TSM连接.Name = "TSM连接";
+            TSM连接.Size = new Size(124, 22);
+            TSM连接.Text = "连接";
             // 
             // TSM断开
             // 
             TSM断开.Name = "TSM断开";
             TSM断开.Size = new Size(124, 22);
             TSM断开.Text = "断开";
-            TSM断开.Click += TSM断开_Click;
             // 
             // TSM开始采集
             // 
             TSM开始采集.Name = "TSM开始采集";
             TSM开始采集.Size = new Size(124, 22);
             TSM开始采集.Text = "开始采集";
-            TSM开始采集.Click += TSM开始采集_Click;
             // 
             // TSM停止采集
             // 
             TSM停止采集.Name = "TSM停止采集";
             TSM停止采集.Size = new Size(124, 22);
             TSM停止采集.Text = "停止采集";
-            TSM停止采集.Click += TSM停止采集_Click;
             // 
             // TSM参数设置
             // 
             TSM参数设置.Name = "TSM参数设置";
             TSM参数设置.Size = new Size(124, 22);
             TSM参数设置.Text = "参数设置";
-            TSM参数设置.Click += TSM参数设置_Click;
             // 
             // TSM删除
             // 
             TSM删除.Name = "TSM删除";
             TSM删除.Size = new Size(124, 22);
             TSM删除.Text = "删除";
-            TSM删除.Click += TSM删除_Click;
             // 
             // BTN捕获图片
             // 
@@ -230,7 +214,6 @@
             BTN捕获图片.TabIndex = 9;
             BTN捕获图片.Text = "捕获图片";
             BTN捕获图片.UseVisualStyleBackColor = true;
-            BTN捕获图片.Click += BTN捕获图片_Click;
             // 
             // BTN目标区域
             // 
@@ -241,7 +224,6 @@
             BTN目标区域.TabIndex = 10;
             BTN目标区域.Text = "目标区域";
             BTN目标区域.UseVisualStyleBackColor = true;
-            BTN目标区域.Click += BTN目标区域_Click;
             // 
             // CB目标区域
             // 
@@ -251,7 +233,6 @@
             CB目标区域.Name = "CB目标区域";
             CB目标区域.Size = new Size(100, 25);
             CB目标区域.TabIndex = 11;
-            CB目标区域.SelectedIndexChanged += CB目标区域_SelectedIndexChanged;
             // 
             // Setting_Camera
             // 
@@ -283,27 +264,27 @@
         #endregion
 
         private MenuStrip MS相机;
-        private ComboBox CB相机列表;
-        private Button BTN查找设备;
-        private TextBox TB信息;
         private ToolStripMenuItem TSM设置;
         private ToolStripMenuItem TSM测试;
-        private PictureBox PB图片;
-        private ListBox LB相机列表;
-        private ToolStripMenuItem TSM截取区域;
-        private ToolStripMenuItem TSM识别;
-        private ToolStripMenuItem TSM选择区域;
         private ContextMenuStrip CMS相机列表;
-        private ToolStripMenuItem TSM连接断开;
-        private ToolStripMenuItem TSM删除;
-        private ToolStripMenuItem TSM开始采集;
-        private ToolStripMenuItem TSM断开;
-        private Button BTN捕获图片;
-        private ToolStripMenuItem TSM停止采集;
-        private ToolStripMenuItem TSM参数设置;
-        private ToolStripMenuItem TSM打开图片;
-        private ToolStripMenuItem TSM添加相机;
-        private Button BTN目标区域;
-        private ComboBox CB目标区域;
+        public ComboBox CB相机列表;
+        public Button BTN查找设备;
+        public PictureBox PB图片;
+        public ListBox LB相机列表;
+        public ToolStripMenuItem TSM截取区域;
+        public ToolStripMenuItem TSM识别;
+        public ToolStripMenuItem TSM选择区域;
+        public Button BTN捕获图片;
+        public ToolStripMenuItem TSM打开图片;
+        public ToolStripMenuItem TSM添加相机;
+        public Button BTN目标区域;
+        public ComboBox CB目标区域;
+        public ToolStripMenuItem TSM连接;
+        public ToolStripMenuItem TSM删除;
+        public ToolStripMenuItem TSM开始采集;
+        public ToolStripMenuItem TSM断开;
+        public ToolStripMenuItem TSM停止采集;
+        public ToolStripMenuItem TSM参数设置;
+        public TextBox TB信息;
     }
 }

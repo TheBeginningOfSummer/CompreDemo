@@ -32,8 +32,8 @@
             BTN轴卡设置 = new Button();
             CB轴 = new ComboBox();
             CB轴卡 = new ComboBox();
-            label2 = new Label();
-            label1 = new Label();
+            LB轴选择 = new Label();
+            LB轴卡选择 = new Label();
             MS菜单 = new MenuStrip();
             TSM连接管理 = new ToolStripMenuItem();
             TSM连接当前卡 = new ToolStripMenuItem();
@@ -64,7 +64,6 @@
             BTN轴参数设置.TabIndex = 2;
             BTN轴参数设置.Text = "轴参数设置";
             BTN轴参数设置.UseVisualStyleBackColor = true;
-            BTN轴参数设置.Click += BTN轴参数设置_Click;
             // 
             // BTN轴卡设置
             // 
@@ -74,7 +73,6 @@
             BTN轴卡设置.TabIndex = 3;
             BTN轴卡设置.Text = "轴卡设置";
             BTN轴卡设置.UseVisualStyleBackColor = true;
-            BTN轴卡设置.Click += BTN轴卡设置_Click;
             // 
             // CB轴
             // 
@@ -91,25 +89,24 @@
             CB轴卡.Name = "CB轴卡";
             CB轴卡.Size = new Size(120, 25);
             CB轴卡.TabIndex = 2;
-            CB轴卡.SelectedIndexChanged += CB轴卡_SelectedIndexChanged;
             // 
-            // label2
+            // LB轴选择
             // 
-            label2.AutoSize = true;
-            label2.Location = new Point(18, 74);
-            label2.Name = "label2";
-            label2.Size = new Size(44, 17);
-            label2.TabIndex = 1;
-            label2.Text = "轴选择";
+            LB轴选择.AutoSize = true;
+            LB轴选择.Location = new Point(18, 74);
+            LB轴选择.Name = "LB轴选择";
+            LB轴选择.Size = new Size(44, 17);
+            LB轴选择.TabIndex = 1;
+            LB轴选择.Text = "轴选择";
             // 
-            // label1
+            // LB轴卡选择
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(18, 44);
-            label1.Name = "label1";
-            label1.Size = new Size(56, 17);
-            label1.TabIndex = 0;
-            label1.Text = "轴卡选择";
+            LB轴卡选择.AutoSize = true;
+            LB轴卡选择.Location = new Point(18, 44);
+            LB轴卡选择.Name = "LB轴卡选择";
+            LB轴卡选择.Size = new Size(56, 17);
+            LB轴卡选择.TabIndex = 0;
+            LB轴卡选择.Text = "轴卡选择";
             // 
             // MS菜单
             // 
@@ -132,14 +129,12 @@
             TSM连接当前卡.Name = "TSM连接当前卡";
             TSM连接当前卡.Size = new Size(136, 22);
             TSM连接当前卡.Text = "连接当前卡";
-            TSM连接当前卡.Click += TSM连接当前卡_Click;
             // 
             // TSM断开当前卡
             // 
             TSM断开当前卡.Name = "TSM断开当前卡";
             TSM断开当前卡.Size = new Size(136, 22);
             TSM断开当前卡.Text = "断开当前卡";
-            TSM断开当前卡.Click += TSM断开当前卡_Click;
             // 
             // TSM测试
             // 
@@ -153,7 +148,6 @@
             TSM打开测试窗口.Name = "TSM打开测试窗口";
             TSM打开测试窗口.Size = new Size(148, 22);
             TSM打开测试窗口.Text = "打开测试窗口";
-            TSM打开测试窗口.Click += TSM打开测试窗口_Click;
             // 
             // TSM自动轨迹测试
             // 
@@ -161,7 +155,6 @@
             TSM自动轨迹测试.Name = "TSM自动轨迹测试";
             TSM自动轨迹测试.Size = new Size(148, 22);
             TSM自动轨迹测试.Text = "自动轨迹测试";
-            TSM自动轨迹测试.Click += TSM自动轨迹测试_Click;
             // 
             // TST轨迹
             // 
@@ -237,7 +230,6 @@
             BTN轴卡删除.TabIndex = 11;
             BTN轴卡删除.Text = "轴卡删除";
             BTN轴卡删除.UseVisualStyleBackColor = true;
-            BTN轴卡删除.Click += BTN轴卡删除_Click;
             // 
             // BTN轴控制
             // 
@@ -247,7 +239,6 @@
             BTN轴控制.TabIndex = 12;
             BTN轴控制.Text = "轴控制";
             BTN轴控制.UseVisualStyleBackColor = true;
-            BTN轴控制.Click += BTN轴控制_Click;
             // 
             // BTN轴删除
             // 
@@ -257,7 +248,6 @@
             BTN轴删除.TabIndex = 14;
             BTN轴删除.Text = "轴删除";
             BTN轴删除.UseVisualStyleBackColor = true;
-            BTN轴删除.Click += BTN轴删除_Click;
             // 
             // BTN轴添加
             // 
@@ -267,7 +257,6 @@
             BTN轴添加.TabIndex = 13;
             BTN轴添加.Text = "轴添加";
             BTN轴添加.UseVisualStyleBackColor = true;
-            BTN轴添加.Click += BTN轴添加_Click;
             // 
             // Setting_Motion
             // 
@@ -289,9 +278,9 @@
             Controls.Add(BTN轴卡设置);
             Controls.Add(MS菜单);
             Controls.Add(CB轴);
-            Controls.Add(label1);
+            Controls.Add(LB轴卡选择);
             Controls.Add(CB轴卡);
-            Controls.Add(label2);
+            Controls.Add(LB轴选择);
             MainMenuStrip = MS菜单;
             Name = "Setting_Motion";
             StartPosition = FormStartPosition.CenterScreen;
@@ -305,29 +294,29 @@
 
         #endregion
         private MenuStrip MS菜单;
-        private ComboBox CB轴;
-        private ComboBox CB轴卡;
-        private Label label2;
-        private Label label1;
-        private Button BTN轴参数设置;
-        private Button BTN轴卡设置;
+        private Label LB轴选择;
+        private Label LB轴卡选择;
         private ToolStripMenuItem TSM测试;
-        private ToolStripMenuItem TSM打开测试窗口;
-        private ToolStripMenuItem TSM自动轨迹测试;
         private Label LBIP地址;
-        private TextBox TBIP地址;
-        private TextBox TB轴名称;
-        private ComboBox CB控制卡类型;
         private Label LB轴名称;
         private Label LB轴卡类型;
-        private Label LB轴卡信息;
-        private Button BTN轴卡删除;
-        private Button BTN轴控制;
         private ToolStripTextBox TST轨迹;
         private ToolStripMenuItem TSM连接管理;
-        private ToolStripMenuItem TSM连接当前卡;
-        private ToolStripMenuItem TSM断开当前卡;
-        private Button BTN轴删除;
-        private Button BTN轴添加;
+        public ComboBox CB轴;
+        public ComboBox CB轴卡;
+        public Button BTN轴参数设置;
+        public Button BTN轴卡设置;
+        public TextBox TBIP地址;
+        public TextBox TB轴名称;
+        public ComboBox CB控制卡类型;
+        public Label LB轴卡信息;
+        public Button BTN轴卡删除;
+        public Button BTN轴控制;
+        public Button BTN轴删除;
+        public Button BTN轴添加;
+        public ToolStripMenuItem TSM打开测试窗口;
+        public ToolStripMenuItem TSM自动轨迹测试;
+        public ToolStripMenuItem TSM连接当前卡;
+        public ToolStripMenuItem TSM断开当前卡;
     }
 }
