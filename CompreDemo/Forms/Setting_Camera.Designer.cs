@@ -52,6 +52,7 @@
             BTN捕获图片 = new Button();
             BTN目标区域 = new Button();
             CB目标区域 = new ComboBox();
+            BTN清除 = new Button();
             MS相机.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PB图片).BeginInit();
             CMS相机列表.SuspendLayout();
@@ -138,6 +139,7 @@
             TB信息.ScrollBars = ScrollBars.Vertical;
             TB信息.Size = new Size(488, 96);
             TB信息.TabIndex = 3;
+            TB信息.TextChanged += TB信息_TextChanged;
             // 
             // PB图片
             // 
@@ -234,11 +236,22 @@
             CB目标区域.Size = new Size(100, 25);
             CB目标区域.TabIndex = 11;
             // 
+            // BTN清除
+            // 
+            BTN清除.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            BTN清除.Location = new Point(688, 151);
+            BTN清除.Name = "BTN清除";
+            BTN清除.Size = new Size(100, 25);
+            BTN清除.TabIndex = 12;
+            BTN清除.Text = "清除";
+            BTN清除.UseVisualStyleBackColor = true;
+            // 
             // Setting_Camera
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(BTN清除);
             Controls.Add(CB目标区域);
             Controls.Add(BTN目标区域);
             Controls.Add(BTN捕获图片);
@@ -286,5 +299,6 @@
         public ToolStripMenuItem TSM停止采集;
         public ToolStripMenuItem TSM参数设置;
         public TextBox TB信息;
+        public Button BTN清除;
     }
 }

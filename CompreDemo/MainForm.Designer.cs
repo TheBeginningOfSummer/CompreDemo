@@ -70,21 +70,21 @@
             // TSM相机配置
             // 
             TSM相机配置.Name = "TSM相机配置";
-            TSM相机配置.Size = new Size(180, 22);
+            TSM相机配置.Size = new Size(148, 22);
             TSM相机配置.Text = "相机配置";
             TSM相机配置.Click += TSM相机配置_Click;
             // 
             // TSM控制卡配置
             // 
             TSM控制卡配置.Name = "TSM控制卡配置";
-            TSM控制卡配置.Size = new Size(180, 22);
+            TSM控制卡配置.Size = new Size(148, 22);
             TSM控制卡配置.Text = "控制卡配置";
             TSM控制卡配置.Click += TSM控制卡配置_Click;
             // 
             // TSM设备方案设置
             // 
             TSM设备方案设置.Name = "TSM设备方案设置";
-            TSM设备方案设置.Size = new Size(180, 22);
+            TSM设备方案设置.Size = new Size(148, 22);
             TSM设备方案设置.Text = "设备方案设置";
             TSM设备方案设置.Click += TSM设备方案设置_Click;
             // 
@@ -211,7 +211,6 @@
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "测试";
-            FormClosing += MainForm_FormClosing;
             MS菜单.ResumeLayout(false);
             MS菜单.PerformLayout();
             GB信息.ResumeLayout(false);

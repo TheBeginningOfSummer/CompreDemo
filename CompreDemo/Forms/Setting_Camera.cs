@@ -127,8 +127,11 @@ namespace CompreDemo.Forms
         //}
         #endregion
 
-
-
-
+        private void TB信息_TextChanged(object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+            textBox.SelectionStart = textBox.Text.Length;
+            textBox.ScrollToCaret();
+        }
     }
 }

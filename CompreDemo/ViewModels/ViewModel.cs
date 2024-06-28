@@ -8,7 +8,6 @@ using Services;
 using System.ComponentModel;
 using Models;
 using Microsoft.VisualBasic;
-using ThridLibray;
 
 namespace ViewModels
 {
@@ -25,13 +24,15 @@ namespace ViewModels
         public Setting_Camera SettingCamera { get; set; }
         #endregion
 
-        #region 窗口数据
-        public readonly BindingList<StringWrapper> ControllerList = [];//控制卡设置列表
+        #region 数据
+        public readonly BindingList<MotionControl> ControllerList = [];//控制卡设置列表
         public readonly BindingList<StringWrapper> CurrentAxes = [];//当前控制卡轴列表
+
         public readonly BindingList<StringWrapper> ExistingCameraList = [];//相机遍历列表
-        public readonly BindingList<StringWrapper> SavedCameraList = [];//存储的相机列表
+        public readonly BindingList<HuarayCamera> SavedCameraList = [];//存储的相机列表
         public readonly BindingList<StringWrapper> ROINameList = [];//图片ROI列表
 
+        //相机修改信息
         private string settingCameraInfo = "";
         public string SettingCameraInfo
         {
@@ -42,23 +43,7 @@ namespace ViewModels
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SettingCameraInfo)));
             }
         }
-        //选定的相机
-        HuarayCamera? selectedCamera;
-        public HuarayCamera? SelectedCamera
-        {
-            get
-            {
-                string[] message = SettingCamera.LB相机列表.Text.Split('[');
-                if (device.Cameras!.TryGetValue(message[0], out selectedCamera))
-                    return selectedCamera;
-                return null;
-            }
-            set
-            {
-                selectedCamera = value;
-            }
-        }
-        //当前图片
+        //当前捕获的图片
         public Bitmap? CurrentImage { get; set; }
         //当前区域
         public int[] CurrentROI = [0, 0, 10, 10];
@@ -78,10 +63,10 @@ namespace ViewModels
         private Window? window;
         #endregion
 
-        public ViewModel(Setting_Motion setting_Motion, Setting_Camera setting_Camera)
+        public ViewModel()
         {
-            SettingMotion = setting_Motion;
-            SettingCamera = setting_Camera;
+            SettingMotion = new();
+            SettingCamera = new();
             MouseCallbackEvent = new MouseCallback(MouseDraw);
             BindingCommand();
             Initialize();
@@ -93,7 +78,7 @@ namespace ViewModels
         {
             #region 轴卡设置窗口方法绑定
             SettingMotion.CB轴卡.SelectedIndexChanged += CB轴卡_SelectedIndexChanged;
-            FormKit.ListBinding(SettingMotion.CB轴卡, ControllerList, "Value", "Value");//绑定控制器列表
+            FormKit.ListBinding(SettingMotion.CB轴卡, ControllerList, "Name", "Name");//绑定控制器列表
             FormKit.ListBinding(SettingMotion.CB轴, CurrentAxes, "Value", "Value");//绑定当前轴列表
             SettingMotion.TSM打开测试窗口.Command = new RelayCommand(打开测试窗口);
             SettingMotion.TSM自动轨迹测试.Command = new RelayCommand(自动轨迹测试);
@@ -110,25 +95,34 @@ namespace ViewModels
             #region 相机设置窗口方法绑定
             SettingCamera.CB目标区域.SelectedIndexChanged += CB目标区域_SelectedIndexChanged;
             FormKit.ListBinding(SettingCamera.CB相机列表, ExistingCameraList, "Value", "Value");//绑定遍历到的相机列表
-            FormKit.ListBinding(SettingCamera.LB相机列表, SavedCameraList, "Value", "Value");//绑定存储的相机列表
+            FormKit.ListBinding(SettingCamera.LB相机列表, SavedCameraList, "UserName", "Key");//绑定存储的相机列表
             FormKit.ListBinding(SettingCamera.CB目标区域, ROINameList, "Value", "Value");
             FormKit.TextBinding(SettingCamera.TB信息, this, nameof(SettingCameraInfo));
             SettingCamera.BTN查找设备.Command = new RelayCommand(查找设备);
-            SettingCamera.BTN捕获图片.Command = new RelayCommand(捕获图片);
+            SettingCamera.BTN捕获图片.Command = new RelayCommand<object>(捕获图片);
+            SettingCamera.BTN捕获图片.CommandParameter = SettingCamera.LB相机列表;
             SettingCamera.BTN目标区域.Command = new RelayCommand(目标区域);
             SettingCamera.TSM添加相机.Command = new RelayCommand(添加相机);
             SettingCamera.TSM截取区域.Command = new RelayCommand(截取区域);
             SettingCamera.TSM打开图片.Command = new RelayCommand(打开图片);
             SettingCamera.TSM识别.Command = new RelayCommand(识别);
             SettingCamera.TSM选择区域.Command = new RelayCommand(选择区域);
+            SettingCamera.BTN清除.Command = new RelayCommand(信息清除);
             //SettingCamera.TSM打开软触发.Command = new RelayCommand(打开软触发);
             //SettingCamera.TSM软触发.Command = new RelayCommand(软触发);
-            SettingCamera.TSM连接.Command = new RelayCommand(相机连接);
-            SettingCamera.TSM断开.Command = new RelayCommand(相机断开);
-            SettingCamera.TSM开始采集.Command = new RelayCommand(开始采集);
-            SettingCamera.TSM停止采集.Command = new RelayCommand(停止采集);
-            SettingCamera.TSM参数设置.Command = new RelayCommand(参数设置);
-            SettingCamera.TSM删除.Command = new RelayCommand(相机删除);
+            //以下为相机操作
+            SettingCamera.TSM连接.Command = new RelayCommand<object>(相机连接);
+            SettingCamera.TSM连接.CommandParameter = SettingCamera.LB相机列表;
+            SettingCamera.TSM断开.Command = new RelayCommand<object>(相机断开);
+            SettingCamera.TSM断开.CommandParameter = SettingCamera.LB相机列表;
+            SettingCamera.TSM开始采集.Command = new RelayCommand<object>(开始采集);
+            SettingCamera.TSM开始采集.CommandParameter = SettingCamera.LB相机列表;
+            SettingCamera.TSM停止采集.Command = new RelayCommand<object>(停止采集);
+            SettingCamera.TSM停止采集.CommandParameter = SettingCamera.LB相机列表;
+            SettingCamera.TSM参数设置.Command = new RelayCommand<object>(参数设置);
+            SettingCamera.TSM参数设置.CommandParameter = SettingCamera.LB相机列表;
+            SettingCamera.TSM删除.Command = new RelayCommand<object>(相机删除);
+            SettingCamera.TSM删除.CommandParameter = SettingCamera.LB相机列表;
             #endregion
         }
         /// <summary>
@@ -160,6 +154,26 @@ namespace ViewModels
             }
         }
         /// <summary>
+        /// 检测并转换
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="item"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public static bool GetTargetItem<T>(object? item, out T? target)
+        {
+            if (item is T tatgetItem)
+            {
+                target = tatgetItem;
+                return true;
+            }
+            else
+            {
+                target = default;
+                return false;
+            }
+        }
+        /// <summary>
         /// 打开指定位置的图片
         /// </summary>
         /// <returns></returns>
@@ -180,21 +194,22 @@ namespace ViewModels
         {
             if (sender is null) return;
             ComboBox comboBox = (ComboBox)sender;
-            UpdateCurrentCardInfo(comboBox.SelectedIndex);//只需要自动切换到第一个项
+            UpdateCurrentCardInfo((MotionControl)comboBox.SelectedItem!);//只需要自动切换到第一个项
         }
 
         public void UpdateControllerList()
         {
             ControllerList.Clear();
             foreach (var controller in device.Controllers.Values)
-                ControllerList.Add(new StringWrapper(controller.Name));
-            UpdateCurrentCardInfo(0);
+                ControllerList.Add(controller);
+            var defaultController = ControllerList.FirstOrDefault();
+            UpdateCurrentCardInfo(defaultController);
         }
 
-        public void UpdateCurrentCardInfo(int index)
+        public void UpdateCurrentCardInfo(MotionControl? controller)
         {
             //轴卡加载
-            var controller = device.GetController(ControllerList[index].Value);
+            //var controller = device.GetController(ControllerList[index].Value);
             if (controller == null) return;
 
             SettingMotion.TBIP地址.Text = controller.IP;
@@ -385,7 +400,7 @@ namespace ViewModels
         {
             SavedCameraList.Clear();
             foreach (var camera in device.Cameras)
-                SavedCameraList.Add(new StringWrapper($"{camera.Key}[{camera.Value.Key}]"));
+                SavedCameraList.Add(camera.Value);
         }
 
         private void UpdateROIName()
@@ -400,18 +415,27 @@ namespace ViewModels
             UpdateExistingCamera();
         }
 
-        private void 捕获图片()
+        private void 捕获图片(object? lb)
         {
-            if (CheckItem(SelectedCamera, "没有选定相机。"))
+            if (!GetTargetItem(lb, out ListBox? listBox))
             {
-                SelectedCamera!.Device?.ExecuteSoftwareTrigger();
-                CurrentImage = SelectedCamera.CatchImage();
+                SettingCameraInfo += $"[{DateTime.Now}] 相机列表为空。";
+                return;
+            }
+            if (GetTargetItem(listBox!.SelectedItem, out HuarayCamera? camera))
+            {
+                camera!.Device?.ExecuteSoftwareTrigger();
+                CurrentImage = camera.CatchImage();
                 if (CheckItem(CurrentImage, "相机捕获图片失败，请连接相机并开启采集。"))
                 {
                     Mat image = BitmapConverter.ToMat(CurrentImage!);
                     image.CopyTo(drewImage);
                     SettingCamera.PB图片.Image = CurrentImage;
                 }
+            }
+            else
+            {
+                SettingCameraInfo += $"[{DateTime.Now}] 没有选中的相机。";
             }
         }
 
@@ -488,128 +512,182 @@ namespace ViewModels
             window?.ShowImage(drewImage);
         }
 
+        private void 信息清除()
+        {
+            SettingCameraInfo = "";
+        }
+
         private void 打开软触发()
         {
-            if (CheckItem(SelectedCamera, "没有选定相机。"))
-            {
-                if (CheckItem(SelectedCamera!.Device, "相机连接断开，请重新连接。"))
-                {
-                    if (SelectedCamera!.Device!.TriggerSet.Open(TriggerSourceEnum.Software))
-                    {
-                        //ShowMessage("打开软触发。");
-                    }
-                }
-            }
+            //if (CheckItem(SelectedCamera, "没有选定相机。"))
+            //{
+            //    if (CheckItem(SelectedCamera!.Device, "相机连接断开，请重新连接。"))
+            //    {
+            //        if (SelectedCamera!.Device!.TriggerSet.Open(TriggerSourceEnum.Software))
+            //        {
+            //            //ShowMessage("打开软触发。");
+            //        }
+            //    }
+            //}
         }
 
         private void 关闭触发()
         {
-            if (SelectedCamera == null)
-            {
-                //ShowMessage("没有选定相机。");
-                return;
-            }
-            if (SelectedCamera.Device == null)
-            {
-                //ShowMessage("相机连接断开，请重新连接。");
-                return;
-            }
-            if (SelectedCamera.Device.TriggerSet.Close())
-            {
-                //ShowMessage("关闭软触发。");
-            }
+            //if (SelectedCamera == null)
+            //{
+            //    //ShowMessage("没有选定相机。");
+            //    return;
+            //}
+            //if (SelectedCamera.Device == null)
+            //{
+            //    //ShowMessage("相机连接断开，请重新连接。");
+            //    return;
+            //}
+            //if (SelectedCamera.Device.TriggerSet.Close())
+            //{
+            //    //ShowMessage("关闭软触发。");
+            //}
         }
 
-        private void 相机连接()
+        private void 相机连接(object? lb)
         {
-            if (CheckItem(SelectedCamera, "没有选定相机。"))
+            if (!GetTargetItem(lb, out ListBox? listBox))
             {
-                var camera = SettingCamera.LB相机列表.SelectedItem;
-                if (camera == null) return;
-                if (SelectedCamera!.OpenCamera())
+                SettingCameraInfo += $"[{DateTime.Now}] 相机列表为空。";
+                return;
+            }
+            if (GetTargetItem(listBox!.SelectedItem, out HuarayCamera? camera))
+            {
+                if (camera!.OpenCamera())
                 {
-                    SettingCameraInfo += $"[{DateTime.Now}] {((StringWrapper)camera).Value}连接成功。";
+                    SettingCameraInfo += $"[{DateTime.Now}] {camera.UserName}连接成功。";
                     //SelectedCamera.Device!.CameraOpened += OnCameraOpen;
                     //SelectedCamera.Device!.ConnectionLost += OnConnectLoss;
                     //SelectedCamera.Device!.CameraClosed += OnCameraClose;
                 }
                 else
                 {
-                    SettingCameraInfo += $"[{DateTime.Now}] {((StringWrapper)camera).Value}连接失败。";
+                    SettingCameraInfo += $"[{DateTime.Now}] {camera.UserName}连接失败。";
                 }
+            }
+            else
+            {
+                SettingCameraInfo += $"[{DateTime.Now}] 没有选中的相机。";
             }
         }
 
-        private void 相机断开()
+        private void 相机断开(object? lb)
         {
-            if (CheckItem(SelectedCamera, "没有选定相机。"))
+            if (!GetTargetItem(lb, out ListBox? listBox))
             {
-                if (SelectedCamera!.CloseCamera())
-                {
-                    SettingCameraInfo += $"[{DateTime.Now}] {SettingCamera.LB相机列表.Text}断开。";
-                }
-                else
-                {
-                    SettingCameraInfo += $"[{DateTime.Now}] {SettingCamera.LB相机列表.Text}断开失败。";
-                }
+                SettingCameraInfo += $"[{DateTime.Now}] 相机列表为空。";
+                return;
+            }
+            if (GetTargetItem(listBox!.SelectedItem, out HuarayCamera? camera))
+            {
+                if (camera!.CloseCamera())
+                    SettingCameraInfo += $"[{DateTime.Now}] {camera.UserName}断开。";
+            }
+            else
+            {
+                SettingCameraInfo += $"[{DateTime.Now}] 没有选中的相机。";
             }
         }
 
-        private void 开始采集()
+        private void 开始采集(object? lb)
         {
-            if (CheckItem(SelectedCamera, "没有选定相机。"))
+            if (!GetTargetItem(lb, out ListBox? listBox))
             {
-                if (SelectedCamera!.Device == null)
+                SettingCameraInfo += $"[{DateTime.Now}] 相机列表为空。";
+                return;
+            }
+            if (GetTargetItem(listBox!.SelectedItem, out HuarayCamera? camera))
+            {
+                if (camera!.Device == null)
                 {
                     SettingCameraInfo += $"[{DateTime.Now}] 相机连接断开，请重新连接。";
                     return;
                 }
-                if (SelectedCamera.StartGrab())
+                if (camera.StartGrab())
                 {
-                    SettingCameraInfo += $"[{DateTime.Now}] {SettingCamera.LB相机列表.Text}开始采集。";
+                    SettingCameraInfo += $"[{DateTime.Now}] {camera.UserName}开始采集。";
                 }
                 else
                 {
-                    SettingCameraInfo += $"[{DateTime.Now}] {SettingCamera.LB相机列表.Text}采集失败。";
+                    SettingCameraInfo += $"[{DateTime.Now}] {camera.UserName}采集失败。";
                 }
+            }
+            else
+            {
+                SettingCameraInfo += $"[{DateTime.Now}] 没有选中的相机。";
             }
         }
 
-        private void 停止采集()
+        private void 停止采集(object? lb)
         {
-            if (CheckItem(SelectedCamera, "没有选定相机。"))
+            if (!GetTargetItem(lb, out ListBox? listBox))
             {
-                if (SelectedCamera!.Device == null)
+                SettingCameraInfo += $"[{DateTime.Now}] 相机列表为空。";
+                return;
+            }
+            if (GetTargetItem(listBox!.SelectedItem, out HuarayCamera? camera))
+            {
+                if (camera!.Device == null)
                 {
                     SettingCameraInfo += $"[{DateTime.Now}] 相机连接断开，请重新连接。";
                     return;
                 }
-                if (SelectedCamera.StopGrab())
+                if (camera.StopGrab())
                 {
-                    SettingCameraInfo += $"[{DateTime.Now}] {SettingCamera.LB相机列表.Text}停止采集。";
+                    SettingCameraInfo += $"[{DateTime.Now}] {camera.UserName}停止采集。";
                 }
                 else
                 {
-                    SettingCameraInfo += $"[{DateTime.Now}] {SettingCamera.LB相机列表.Text}停止采集失败。";
+                    SettingCameraInfo += $"[{DateTime.Now}] {camera.UserName}停止采集失败。";
                 }
+            }
+            else
+            {
+                SettingCameraInfo += $"[{DateTime.Now}] 没有选中的相机。";
             }
         }
 
-        private void 参数设置()
+        private void 参数设置(object? lb)
         {
-            if (SelectedCamera == null) return;
-            Setting cameraSetting = new(SelectedCamera);
-            cameraSetting.Show();
+            if (!GetTargetItem(lb, out ListBox? listBox))
+            {
+                SettingCameraInfo += $"[{DateTime.Now}] 相机列表为空。";
+                return;
+            }
+            if (GetTargetItem(listBox!.SelectedItem, out HuarayCamera? camera))
+            {
+                Setting cameraSetting = new(camera!);
+                cameraSetting.Show();
+            }
+            else
+            {
+                SettingCameraInfo += $"[{DateTime.Now}] 没有选中的相机。";
+            }
         }
 
-        private void 相机删除()
+        private void 相机删除(object? lb)
         {
             try
             {
-                string? name = SettingCamera.LB相机列表.SelectedItem?.ToString();
-                if (name == null) return;
-                device.DeleteCamera(name.Split('-')[0]);
-                UpdateSavedCamera();
+                if (!GetTargetItem(lb, out ListBox? listBox))
+                {
+                    SettingCameraInfo += $"[{DateTime.Now}] 相机列表为空。";
+                    return;
+                }
+                if (GetTargetItem(listBox!.SelectedItem, out HuarayCamera? camera))
+                {
+                    device.DeleteCamera(camera!.UserName);
+                    UpdateSavedCamera();
+                }
+                else
+                {
+                    SettingCameraInfo += $"[{DateTime.Now}] 没有选中的相机。";
+                }
             }
             catch (Exception ex)
             {

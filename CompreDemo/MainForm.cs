@@ -9,8 +9,6 @@ namespace CompreDemo
     public partial class MainForm : Form
     {
         readonly DeviceManager device = DeviceManager.Instance;
-        readonly Setting_Motion motionSetting;
-        readonly Setting_Camera cameraSetting;
         readonly ViewModel viewModel;
         Tray currentTest = new();
 
@@ -29,10 +27,7 @@ namespace CompreDemo
                 Record($"程序初始化失败。{e.Message}", LogType.Error);
             }
 
-            motionSetting = new();
-            cameraSetting = new();
-            viewModel = new(motionSetting, cameraSetting);
-            
+            viewModel = new();
         }
 
         private void ShowMessage(string message)
@@ -60,23 +55,18 @@ namespace CompreDemo
 
         private void TSM控制卡配置_Click(object sender, EventArgs e)
         {
-            motionSetting.Show();
+            viewModel.SettingMotion.Show();
         }
 
         private void TSM相机配置_Click(object sender, EventArgs e)
         {
-            cameraSetting.ShowDialog();
+            viewModel.SettingCamera.ShowDialog();
         }
 
         private void TSM设备方案设置_Click(object sender, EventArgs e)
         {
             UsingPlan listSetting = new();
             listSetting.Show();
-        }
-
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-
         }
 
         private void BTN开始测试_Click(object sender, EventArgs e)
